@@ -1,43 +1,66 @@
-# Empire Residential Web App
+# Empire Residential Apartments
 
-Welcome to the Empire Residential property booking application. This modern web application provides a stunning glassmorphism-inspired UI to discover and book premium accommodations.
+A modern Next.js booking experience for curated apartment stays, with a text-first assistant (`Genie`), fast filtering, and mobile-first UX.
 
-## Features Let We Built
-- **Responsive Design**: Beautiful interface powered by Tailwind CSS.
-- **Dynamic Property Viewing**: Browse properties extracted from custom data sources.
-- **Glassmorphism UI**: High-end visual aesthetic ensuring a premium feel.
-- **Mock Booking Engine**: A Next.js API route-driven backend simulating checkout and booking history.
+## What this app includes
 
-## Getting Started
+- Premium landing + property discovery flow
+- Dedicated `How it works` page
+- Property detail pages with gallery, reviews, and booking context
+- Booking flow with guest details, availability calendar, and checkout summary
+- Trips page for upcoming/completed booking history
+- `Genie` assistant for natural-language stay recommendations
+- Responsive layouts optimized for mobile interactions
 
-First, run the development server:
+## Tech stack
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Framer Motion
+- Tailwind CSS v4 (global CSS-driven styling)
+- Phosphor icon font package (`@phosphor-icons/web`)
+
+## Routes
+
+- `/` - Landing + search + listing explorer
+- `/how-it-works` - Product explanation page
+- `/property/[id]` - Property details
+- `/book/[id]` - Booking flow for selected property
+- `/bookings` - Booking history/trips
+
+## API endpoints
+
+- `GET /api/properties` - List all properties
+- `GET /api/properties/[id]` - Single property payload
+- `GET /api/bookings` - Bookings list
+- `POST /api/bookings` - Create booking (mocked persistence behavior)
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-## Project Structure
+## Quality checks
 
-- `src/app/api`: Next.js Route Handlers for properties and bookings.
-- `src/app/ (page.tsx, layout.tsx)`: The main entry points and views for the app.
-- `src/components`: Reusable UI elements such as `Header`, `Footer`, and `BookingFlow`.
-- `public/`: Static assets including generated property images and `logo.png`.
-- `src/data/properties.json`: Structured property data synthesized from scraped local files.
+```bash
+npm run lint
+npm run build
+```
 
-## Technology Stack
+## Project structure
 
-- [Next.js](https://nextjs.org) (App Router)
-- React
-- [Tailwind CSS](https://tailwindcss.com)
-- TypeScript
-- Phosphor Icons
+- `src/app` - App Router pages, layouts, and route handlers
+- `src/components` - UI and interaction components (Header, Footer, PropertyExplorer, BookingFlow, Genie)
+- `src/data` - Property and metadata source files
+- `src/lib` - Shared event/state helpers
+- `public` - Static assets (logo, property images, icons)
 
-Enjoy your premium stays with Empire Residential!
+## Notes
+
+- Mobile browser extensions/attribute injection can trigger hydration warnings in dev overlays; hydration safeguards are already applied in key interactive controls.
+- This repository uses local image assets under `public/images/properties/*`.
