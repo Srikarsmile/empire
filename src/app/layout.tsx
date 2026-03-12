@@ -11,6 +11,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: 'cover',
+  themeColor: '#ffffff',
 };
 
 export const metadata: Metadata = {
@@ -18,7 +19,6 @@ export const metadata: Metadata = {
   title: 'Empire Cars Sosua | Airport Pickup and Daily Rentals',
   description: 'Premium car rentals in Sosua and Puerto Plata. Straightforward pricing, airport delivery, and a well-maintained fleet of cars, SUVs, and vans.',
   keywords: 'sosua car rental, puerto plata car rental, dominican republic rent a car, cabarete car rental',
-  themeColor: '#ffffff',
   icons: {
     icon: [
       { url: '/icon.png', type: 'image/png' },
@@ -61,6 +61,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="bg-white text-[#111] antialiased">

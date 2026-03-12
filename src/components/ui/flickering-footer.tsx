@@ -3,7 +3,6 @@
 import { ChevronRight, Instagram, Twitter, Facebook } from "lucide-react";
 import { ClassValue, clsx } from "clsx";
 import * as Color from "color-bits";
-import Image from "next/image";
 import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -323,6 +322,7 @@ export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
         <div className="flex flex-col items-start justify-start gap-y-5 max-w-sm mx-0">
           <Link href="/" className="flex items-center gap-3">
              <div className="flex h-16 w-auto p-2 bg-white rounded-xl border-2 border-neutral-200/20 shadow-sm items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.png" alt="Empire Cars Logo" className="h-full w-auto object-contain" />
              </div>
           </Link>

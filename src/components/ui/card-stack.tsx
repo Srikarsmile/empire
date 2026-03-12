@@ -4,6 +4,7 @@ import * as React from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { SquareArrowOutUpRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -244,7 +245,7 @@ export function CardStack<T extends CardStackItem>({
                     dragConstraints: { left: 0, right: 0 },
                     dragElastic: 0.18,
                     onDragEnd: (
-                      _e: any,
+                      _e: MouseEvent | TouchEvent | globalThis.PointerEvent,
                       info: { offset: { x: number }; velocity: { x: number } },
                     ) => {
                       if (reduceMotion) return;
@@ -364,9 +365,10 @@ function DefaultFanCard({ item }: { item: CardStackItem; active: boolean }) {
     <div className="relative h-full w-full">
       <div className="absolute inset-0">
         {item.imageSrc ? (
-          <img
+          <Image
             src={item.imageSrc}
             alt={item.title}
+            fill
             className="h-full w-full object-cover"
             draggable={false}
             loading="eager"

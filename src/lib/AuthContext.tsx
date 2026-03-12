@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 type User = {
   phone: string;
@@ -22,22 +22,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-
-  // Rehydrate user from localStorage on mount
-  useEffect(() => {
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem(AUTH_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as User;
-        if (parsed.phone) {
-          setUser(parsed);
-        }
+        if (parsed.phone) return parsed;
       }
     } catch {
       // Ignore parse errors
     }
-  }, []);
+    return null;
+  });
 
   const openAuth = () => setIsOpen(true);
   const closeAuth = () => setIsOpen(false);

@@ -11,9 +11,9 @@
 import React, { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { clsx } from "clsx";
+import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-function cn(...inputs: any[]) { return twMerge(clsx(inputs)); }
+function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
 interface InteractiveHoverButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
   text?: string;
@@ -47,7 +47,7 @@ export default function InteractiveHoverButton({
         setTimeout(() => {
           setStatus("idle");
         }, 3000); 
-      } catch (err) {
+      } catch {
         setStatus("idle");
       }
     } else {

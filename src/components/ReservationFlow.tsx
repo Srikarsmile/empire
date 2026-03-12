@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle2, Plane, ShieldCheck, Headset } from 'lucide-react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import AvailabilityCalendar from '@/components/AvailabilityCalendar';
 import type { DateRange } from '@/data/vehicleMeta';
 

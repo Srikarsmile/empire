@@ -54,7 +54,7 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
 
     // If all filled, trigger submit automatically
     if (newOtp.every((val) => val !== "") && index === 5) {
-      verifyOtp(newOtp.join(""));
+      verifyOtp();
     } else {
       focusNextInfo(index);
     }
@@ -101,11 +101,11 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
     setActiveIndex(nextIndex);
 
     if (pastedData.length === 6) {
-      verifyOtp(pastedData);
+      verifyOtp();
     }
   };
 
-  const verifyOtp = async (code: string) => {
+  const verifyOtp = async () => {
     setIsLoading(true);
     // Simulate API Verification
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -120,7 +120,7 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
 
   const verifyManually = () => {
     if (otp.every((val) => val !== "")) {
-      verifyOtp(otp.join(""));
+      verifyOtp();
     }
   };
 

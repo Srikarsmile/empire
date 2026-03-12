@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -24,7 +24,7 @@ export default function ReservationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchReservations = useCallback(() => {
+  const fetchReservations = () => {
     setIsLoading(true);
     setError(null);
 
@@ -41,11 +41,25 @@ export default function ReservationsPage() {
         setError(err.message);
         setIsLoading(false);
       });
-  }, []);
+  };
 
   useEffect(() => {
-    fetchReservations();
-  }, [fetchReservations]);
+    // Initial fetch — isLoading is already true from the initializer,
+    // so we skip synchronous setState and go straight to the async fetch.
+    fetch('/api/reservations')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load reservations');
+        return res.json();
+      })
+      .then((data) => {
+        setReservations(data);
+        setIsLoading(false);
+      })
+      .catch((err: Error) => {
+        setError(err.message);
+        setIsLoading(false);
+      });
+  }, []);
 
   const filteredReservations = useMemo(
     () => reservations.filter((reservation) => reservation.status === activeTab),

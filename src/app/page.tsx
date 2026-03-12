@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import FleetExplorer from '@/components/FleetExplorer';
 import { getAllVehicles } from '@/lib/vehicleData';
 import { Plane, BadgeDollarSign, CarFront } from 'lucide-react';

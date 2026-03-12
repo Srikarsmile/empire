@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Phone, Loader2, Apple } from "lucide-react";
+import { Phone, Loader2 } from "lucide-react";
 
 interface AuthFormProps {
   onPhoneSubmit: (phone: string) => void;
@@ -73,7 +73,7 @@ export default function AuthForm({ onPhoneSubmit }: AuthFormProps) {
       </form>
       
       <p className="text-center text-xs text-gray-500 max-w-[280px] mx-auto leading-relaxed">
-        By continuing, you agree to Empire's <a href="#" className="underline font-medium hover:text-black transition-colors">Terms of Service</a> and <a href="#" className="underline font-medium hover:text-black transition-colors">Privacy Policy</a>.
+        By continuing, you agree to Empire&apos;s <a href="#" className="underline font-medium hover:text-black transition-colors">Terms of Service</a> and <a href="#" className="underline font-medium hover:text-black transition-colors">Privacy Policy</a>.
       </p>
     </div>
   );

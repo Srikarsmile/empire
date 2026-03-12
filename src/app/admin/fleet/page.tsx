@@ -2,50 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Edit2, Trash2, MoreVertical } from "lucide-react";
+import { Plus, Search, Edit2, Trash2 } from "lucide-react";
 import vehiclesData from "@/data/vehicles.json";
 
-// Types
-export type Car = {
+interface VehicleRecord {
   id: string;
-  make: string;
-  model: string;
-  year: number;
-  type: string;
-  pricePerDay: number;
-  status: "Available" | "Rented" | "Maintenance";
-  imageUrl: string;
-};
-
-// Mock Initial Data
-const MOCK_CARS: Car[] = [
-  {
-    id: "1",
-    make: "Toyota",
-    model: "RAV4",
-    year: 2024,
-    type: "SUV",
-    pricePerDay: 85,
-    status: "Available",
-    imageUrl: "/images/placeholder.jpg" // We'll update this once storage is working
-  },
-  {
-    id: "2",
-    make: "Honda",
-    model: "CR-V",
-    year: 2023,
-    type: "SUV",
-    pricePerDay: 80,
-    status: "Rented",
-    imageUrl: "/images/placeholder.jpg"
-  }
-];
+  title: string;
+  price: number;
+  capacity: number;
+  description: string;
+  amenities: string[];
+  images: string[];
+  location: string;
+  make?: string;
+  model?: string;
+  transmission?: string;
+  pricePerDay?: number;
+}
 
 export default function FleetManagement() {
-  const [cars, setCars] = useState<any[]>(vehiclesData);
+  const [, /* cars */ setCars] = useState<VehicleRecord[]>(vehiclesData as VehicleRecord[]);
+  void setCars; // suppress unused warning — will be used when CRUD is implemented
+  const cars = vehiclesData as VehicleRecord[];
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredCars = cars.filter((car: any) => 
+  const filteredCars = cars.filter((car) => 
     `${car.make || car.title} ${car.model || ''}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -81,11 +62,12 @@ export default function FleetManagement() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-        {filteredCars.map((car: any) => (
+        {filteredCars.map((car) => (
           <div key={car.id} className="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
             {/* Image Container */}
             <div className="aspect-[4/3] bg-gray-100 relative">
               {car.images?.[0] ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={car.images[0]} alt={car.title} className="w-full h-full object-cover" />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
@@ -65,6 +65,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center group pl-2">
             <div className="flex h-[24px] w-auto items-center justify-center transition-transform duration-500 group-hover:scale-105">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="Empire Cars Logo" className="h-full w-auto object-contain" />
             </div>
           </Link>

@@ -26,6 +26,7 @@ export default function AdminLayout({
       <aside className="w-full md:w-64 bg-white border-r border-gray-200 md:min-h-screen flex flex-col justify-between hidden md:flex">
         <div className="p-6">
           <Link href="/" className="flex items-center gap-3 mb-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Empire Cars Logo" className="h-10 w-auto object-contain" />
             <span className="font-semibold text-lg tracking-tight">Admin</span>
           </Link>
@@ -76,6 +77,7 @@ export default function AdminLayout({
       {/* Mobile Nav Header Placeholder */}
       <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="Empire Cars Logo" className="h-8 w-auto object-contain" />
           <span className="font-semibold text-lg tracking-tight">Admin</span>
         </div>

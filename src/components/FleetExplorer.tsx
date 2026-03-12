@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
@@ -83,31 +83,23 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
   const searchParams = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState(() => searchParams.get('checkIn') ?? '');
+  const [checkOut, setCheckOut] = useState(() => searchParams.get('checkOut') ?? '');
   const [guests, setGuests] = useState(2);
   const [maxPrice, setMaxPrice] = useState(160);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('recommended');
-  const [favorites, setFavorites] = useState<string[]>([]);
-
-  // Initialize dates from URL search params
-  useEffect(() => {
-    const urlCheckIn = searchParams.get('checkIn');
-    const urlCheckOut = searchParams.get('checkOut');
-    if (urlCheckIn) setCheckIn(urlCheckIn);
-    if (urlCheckOut) setCheckOut(urlCheckOut);
-  }, [searchParams]);
-
-  // Hydrate favorites from local storage safely on the client
-  useEffect(() => {
+  const [favorites, setFavorites] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('favorites');
-      if (saved) setFavorites(JSON.parse(saved));
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('favorites');
+        if (saved) return JSON.parse(saved);
+      }
     } catch {
       // fallback
     }
-  }, []);
+    return [];
+  });
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
