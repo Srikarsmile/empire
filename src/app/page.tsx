@@ -23,7 +23,7 @@ export default function Home() {
 
       {/* Stark Utility Hero (Uber Style) */}
       <section className="relative pt-32 pb-16 md:pt-40 md:pb-32 overflow-visible px-4 sm:px-6 mx-auto max-w-7xl">
-        <div className="flex flex-col xl:flex-row gap-16 xl:gap-8 items-center xl:items-start justify-between">
+        <div className="flex flex-col-reverse xl:flex-row gap-16 xl:gap-8 items-center xl:items-start justify-between">
           
           <div className="flex flex-col gap-8 w-full xl:w-1/2 max-w-xl shrink-0 z-10 relative">
             <div className="space-y-4">

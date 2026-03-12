@@ -44,46 +44,51 @@ export default function Header() {
     return null;
   }
 
-  return (
+   return (
     <motion.header
       className={cn(
         "fixed top-0 inset-x-0 z-50 transition-all duration-500 ease-out",
-        isScrolled ? "py-2" : "py-4 md:py-6"
+        isScrolled ? "py-2" : "py-3 md:py-5"
       )}
       initial={false}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className={cn(
-        "mx-auto max-w-6xl px-4 transition-all duration-500",
-        isScrolled ? "px-4" : "px-4 sm:px-6"
+        "mx-auto max-w-6xl transition-all duration-500",
+        isScrolled ? "px-3" : "px-4 sm:px-6"
       )}>
         <div className={cn(
-          "flex items-center justify-between rounded-full border border-black/[0.06] bg-white/80 px-4 py-2 backdrop-blur-lg shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-500 dark:bg-black/50 dark:border-white/10",
-          isScrolled ? "bg-white/95 shadow-[0_4px_12px_rgba(0,0,0,0.06)]" : "bg-white/80"
+          "flex items-center justify-between rounded-2xl border px-5 py-2.5 backdrop-blur-xl transition-all duration-500",
+          isScrolled
+            ? "border-black/[0.08] bg-white/95 shadow-[0_8px_30px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.6)]"
+            : "border-black/[0.04] bg-white/70 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
         )}>
           {/* Logo */}
-          <Link href="/" className="flex items-center group pl-2">
-            <div className="flex h-[24px] w-auto items-center justify-center transition-transform duration-500 group-hover:scale-105">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className={cn(
+              "flex w-auto items-center justify-center transition-all duration-500 group-hover:scale-105",
+              isScrolled ? "h-[32px]" : "h-[36px]"
+            )}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Empire Cars Logo" className="h-full w-auto object-contain" />
+              <img src="/logo.png" alt="Empire Cars" className="h-full w-auto object-contain" />
             </div>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-0.5">
             {NAV_LINKS.map((item, index) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="relative px-5 py-2.5 text-sm font-semibold text-[#444] transition-colors hover:text-[#111] rounded-full"
+                className="relative px-4 py-2 text-[13px] font-semibold tracking-wide uppercase text-neutral-500 transition-colors hover:text-neutral-900 rounded-lg"
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
                 {hoveredIndex === index && (
                   <motion.div
                     layoutId="nav-hover"
-                    className="absolute inset-0 -z-10 rounded-full bg-[#F5F5F5]"
+                    className="absolute inset-0 -z-10 rounded-lg bg-neutral-100/80"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -96,20 +101,20 @@ export default function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {user ? (
-              <div className="hidden sm:flex items-center gap-3 mr-2">
+              <div className="hidden sm:flex items-center gap-3 mr-1">
                 {user.isAdmin && (
                    <Link 
                      href="/admin" 
-                     className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                     className="text-xs font-bold tracking-wide uppercase text-blue-600 hover:text-blue-800 transition-colors"
                    >
-                     Admin Panel
+                     Admin
                    </Link>
                 )}
                 <button
                   onClick={logout}
-                  className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                  className="text-xs font-semibold tracking-wide uppercase text-neutral-400 hover:text-neutral-700 transition-colors"
                 >
                   Log out
                 </button>
@@ -117,7 +122,7 @@ export default function Header() {
             ) : (
               <button
                 onClick={openAuth}
-                className="hidden sm:flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-[#444] hover:text-[#111] transition-colors"
+                className="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 text-[13px] font-semibold tracking-wide text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100/80 transition-all"
               >
                 Log in
               </button>
@@ -125,14 +130,14 @@ export default function Header() {
             
             <Link
               href="/reservations"
-              className="hidden sm:flex h-10 items-center justify-center rounded-full bg-[#111] px-6 text-sm font-bold text-white transition-all hover:bg-[#333] hover:scale-105 active:scale-95 duration-300"
+              className="hidden sm:flex h-9 items-center justify-center rounded-lg bg-neutral-900 px-5 text-[13px] font-bold tracking-wide text-white transition-all hover:bg-black hover:shadow-md active:scale-[0.97] duration-200"
             >
               Reserve
             </Link>
 
             {/* Mobile Menu Toggle */}
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F5F5] text-[#111] transition-colors hover:bg-[#E5E5E5] md:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-100 text-neutral-700 transition-colors hover:bg-neutral-200 md:hidden"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <AnimatePresence mode="wait">
@@ -143,7 +148,7 @@ export default function Header() {
                   exit={{ opacity: 0, rotate: 90 }}
                   transition={{ duration: 0.15 }}
                 >
-                  {menuOpen ? <X size={20} /> : <Menu size={20} />}
+                  {menuOpen ? <X size={18} /> : <Menu size={18} />}
                 </motion.div>
               </AnimatePresence>
             </button>

@@ -139,8 +139,8 @@ export default function AvailabilityCalendar({
             <div key={monthLabel} className="calendar-month">
               <h4>{monthLabel}</h4>
               <div className="calendar-weekdays">
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day) => (
-                  <span key={day}>{day}</span>
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  <span key={i}>{day}</span>
                 ))}
               </div>
 

@@ -376,7 +376,7 @@ export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/80 to-white z-10 from-20% lg:from-30%" />
         <div className="absolute inset-0 mx-6">
           <FlickeringGrid
-            text={mobile ? "Empire" : tablet ? "Empire Cars" : "Empire Cars"}
+            text={mobile ? "Empire Cars" : tablet ? "Empire Cars" : "Empire Cars"}
             fontSize={mobile ? 80 : tablet ? 150 : 200}
             className="h-full w-full opacity-60"
             squareSize={3}
