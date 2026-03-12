@@ -1,0 +1,94 @@
+[
+  {
+    "id": "prop-1",
+    "title": "Jeep Wrangler Sahara 4x4",
+    "price": 118,
+    "capacity": 5,
+    "description": "A ready-for-anything Wrangler for beach days, mountain roads, and late airport arrivals. Empire preps every rental with cold A/C, a full tank option, and quick WhatsApp support so you can get moving across Sosua without friction.",
+    "amenities": [
+      "4x4 capability",
+      "Airport pickup",
+      "Automatic",
+      "Bluetooth audio",
+      "Beach gear add-on",
+      "Unlimited mileage"
+    ],
+    "images": [
+      "/images/fleet/jeep_wrangler.png"
+    ],
+    "location": "Sosua and Puerto Plata Airport"
+  },
+  {
+    "id": "prop-2",
+    "title": "Hyundai Accent City Edition",
+    "price": 52,
+    "capacity": 5,
+    "description": "A smart daily driver for airport transfers, short errands, and weekend runs between Sosua, Cabarete, and Puerto Plata. It is fuel efficient, easy to park, and ideal for couples or solo travelers who want straightforward pricing.",
+    "amenities": [
+      "Fuel efficient",
+      "Airport pickup",
+      "Automatic",
+      "USB charging",
+      "Unlimited mileage"
+    ],
+    "images": [
+      "/images/fleet/hyundai_accent.png"
+    ],
+    "location": "Sosua and Puerto Plata Airport"
+  },
+  {
+    "id": "prop-3",
+    "title": "Kia Sportage Touring SUV",
+    "price": 79,
+    "capacity": 5,
+    "description": "A balanced SUV for travelers who need comfort, luggage space, and enough height for the north coast's mixed roads. This option is popular for family trips and longer stays because it gives you room without moving into van pricing.",
+    "amenities": [
+      "Automatic",
+      "Airport pickup",
+      "Bluetooth audio",
+      "Child seat available",
+      "Air conditioning",
+      "Unlimited mileage"
+    ],
+    "images": [
+      "/images/fleet/kia_sportage.png"
+    ],
+    "location": "Sosua, Cabarete, and POP Airport"
+  },
+  {
+    "id": "prop-4",
+    "title": "Toyota Hiace Group Van",
+    "price": 145,
+    "capacity": 10,
+    "description": "Built for groups, surf crews, and family airport runs with extra luggage. The Hiace keeps everyone together, cuts coordination headaches, and works especially well when your pickup or drop-off schedule changes mid-trip.",
+    "amenities": [
+      "10 seats",
+      "Airport meet and greet",
+      "Luggage friendly",
+      "Private driver available",
+      "Air conditioning"
+    ],
+    "images": [
+      "/images/fleet/toyota_hiace.png"
+    ],
+    "location": "Sosua, Cabarete, and Puerto Plata"
+  },
+  {
+    "id": "prop-5",
+    "title": "Chevrolet Camaro Convertible",
+    "price": 132,
+    "capacity": 4,
+    "description": "A premium convertible for travelers who want the coast to feel like part of the trip. Best for couples, special weekends, and anyone who wants a sharper-looking handoff at the villa, resort, or airport.",
+    "amenities": [
+      "Convertible roof",
+      "Premium sound",
+      "Automatic",
+      "Airport pickup",
+      "Weekend favorite"
+    ],
+    "images": [
+      "/images/fleet/chevy_camaro.png"
+    ],
+    "location": "Sosua, Cabarete, and POP Airport"
+  }
+]
