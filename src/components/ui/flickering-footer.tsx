@@ -372,14 +372,14 @@ export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
         </p>
       </div>
       
-      <div className="w-full h-48 md:h-64 lg:h-72 relative mt-4 z-0 pointer-events-none select-none overflow-hidden">
+      <div className="w-full h-44 md:h-64 lg:h-72 relative mt-4 z-0 pointer-events-none select-none overflow-hidden pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/80 to-white z-10 from-20% lg:from-30%" />
-        <div className="absolute inset-0 mx-6">
+        <div className={cn("absolute inset-0", mobile ? "mx-2" : "mx-6")}>
           <FlickeringGrid
             text={mobile ? "Empire Cars" : tablet ? "Empire Cars" : "Empire Cars"}
-            fontSize={mobile ? 80 : tablet ? 150 : 200}
+            fontSize={mobile ? 58 : tablet ? 150 : 200}
             className="h-full w-full opacity-60"
-            squareSize={3}
+            squareSize={mobile ? 2 : 3}
             gridGap={tablet ? 2 : 3}
             color="#000000"
             maxOpacity={0.10}

@@ -79,29 +79,33 @@ export default function HeroBookingWidget() {
           <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
             Pick-up Date
           </label>
-          <input
-            type="date"
-            value={checkIn}
-            onChange={(e) => setCheckIn(e.target.value)}
-            className={cn(
-              "block h-14 w-full min-w-0 max-w-full overflow-hidden rounded-xl bg-neutral-100 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black",
-              useTwoColumns ? "text-sm" : "text-[15px]",
-            )}
-          />
+          <div className="hero-booking-date-wrap min-w-0 w-full overflow-hidden rounded-xl bg-neutral-100">
+            <input
+              type="date"
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+              className={cn(
+                "hero-booking-date-input block h-14 w-full min-w-0 max-w-full border-0 bg-transparent px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black",
+                useTwoColumns ? "text-sm" : "text-[15px]",
+              )}
+            />
+          </div>
         </div>
         <div className="min-w-0 flex flex-col gap-1.5">
           <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
             Return Date
           </label>
-          <input
-            type="date"
-            value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
-            className={cn(
-              "block h-14 w-full min-w-0 max-w-full overflow-hidden rounded-xl bg-neutral-100 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black",
-              useTwoColumns ? "text-sm" : "text-[15px]",
-            )}
-          />
+          <div className="hero-booking-date-wrap min-w-0 w-full overflow-hidden rounded-xl bg-neutral-100">
+            <input
+              type="date"
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
+              className={cn(
+                "hero-booking-date-input block h-14 w-full min-w-0 max-w-full border-0 bg-transparent px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black",
+                useTwoColumns ? "text-sm" : "text-[15px]",
+              )}
+            />
+          </div>
         </div>
       </div>
 
