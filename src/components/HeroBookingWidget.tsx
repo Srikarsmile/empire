@@ -1,13 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import InteractiveHoverButton from "@/components/ui/interactive-hover-button";
+import { cn } from "@/lib/utils";
 
 export default function HeroBookingWidget() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
+  const [useTwoColumns, setUseTwoColumns] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const updateLayout = (width: number) => {
+      // Native date inputs need more room than standard text inputs on mobile.
+      setUseTwoColumns(width >= 560);
+    };
+
+    updateLayout(element.getBoundingClientRect().width);
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      updateLayout(entry.contentRect.width);
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -27,7 +51,10 @@ export default function HeroBookingWidget() {
   };
 
   return (
-    <div className="bg-white border-2 border-neutral-100 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 w-full">
+    <div
+      ref={containerRef}
+      className="bg-white border-2 border-neutral-100 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 w-full"
+    >
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
           Pick-up Location
@@ -42,8 +69,13 @@ export default function HeroBookingWidget() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-        <div className="flex flex-col gap-1.5">
+      <div
+        className={cn(
+          "grid gap-3",
+          useTwoColumns ? "grid-cols-2 gap-4" : "grid-cols-1",
+        )}
+      >
+        <div className="min-w-0 flex flex-col gap-1.5">
           <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
             Pick-up Date
           </label>
@@ -51,10 +83,13 @@ export default function HeroBookingWidget() {
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="w-full min-w-0 bg-neutral-100 rounded-xl h-14 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black"
+            className={cn(
+              "block h-14 w-full min-w-0 max-w-full overflow-hidden rounded-xl bg-neutral-100 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black",
+              useTwoColumns ? "text-sm" : "text-[15px]",
+            )}
           />
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="min-w-0 flex flex-col gap-1.5">
           <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
             Return Date
           </label>
@@ -62,7 +97,10 @@ export default function HeroBookingWidget() {
             type="date"
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
-            className="w-full min-w-0 bg-neutral-100 rounded-xl h-14 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black"
+            className={cn(
+              "block h-14 w-full min-w-0 max-w-full overflow-hidden rounded-xl bg-neutral-100 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black",
+              useTwoColumns ? "text-sm" : "text-[15px]",
+            )}
           />
         </div>
       </div>
