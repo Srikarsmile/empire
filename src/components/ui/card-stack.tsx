@@ -244,6 +244,7 @@ export function CardStack<T extends CardStackItem>({
                     drag: "x" as const,
                     dragConstraints: { left: 0, right: 0 },
                     dragElastic: 0.18,
+                    dragMomentum: false,
                     onDragEnd: (
                       _e: MouseEvent | TouchEvent | globalThis.PointerEvent,
                       info: { offset: { x: number }; velocity: { x: number } },
@@ -264,7 +265,7 @@ export function CardStack<T extends CardStackItem>({
                   key={item.id}
                   className={cn(
                     "absolute bottom-0 rounded-2xl border-4 border-black/10 overflow-hidden shadow-xl",
-                    "will-change-transform select-none",
+                    "transform-gpu will-change-transform select-none",
                     isActive
                       ? "cursor-grab active:cursor-grabbing"
                       : "cursor-pointer",
@@ -274,6 +275,8 @@ export function CardStack<T extends CardStackItem>({
                     height: cardHeight,
                     zIndex,
                     transformStyle: "preserve-3d",
+                    backfaceVisibility: "hidden",
+                    WebkitBackfaceVisibility: "hidden",
                   }}
                   initial={
                     reduceMotion
@@ -299,6 +302,7 @@ export function CardStack<T extends CardStackItem>({
                     type: "spring",
                     stiffness: springStiffness,
                     damping: springDamping,
+                    mass: 0.85,
                   }}
                   onClick={() => setActive(i)}
                   {...dragProps}
@@ -360,7 +364,7 @@ export function CardStack<T extends CardStackItem>({
   );
 }
 
-function DefaultFanCard({ item }: { item: CardStackItem; active: boolean }) {
+function DefaultFanCard({ item, active }: { item: CardStackItem; active: boolean }) {
   return (
     <div className="relative h-full w-full">
       <div className="absolute inset-0">
@@ -371,7 +375,9 @@ function DefaultFanCard({ item }: { item: CardStackItem; active: boolean }) {
             fill
             className="h-full w-full object-cover"
             draggable={false}
-            loading="eager"
+            priority={active}
+            loading={active ? undefined : "lazy"}
+            sizes="(max-width: 640px) 280px, (max-width: 1024px) 380px, 440px"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm text-gray-400">

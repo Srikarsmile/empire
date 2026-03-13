@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -59,19 +60,25 @@ export default function Header() {
         isScrolled ? "px-3" : "px-4 sm:px-6"
       )}>
         <div className={cn(
-          "flex items-center justify-between rounded-2xl border px-5 py-2.5 backdrop-blur-xl transition-all duration-500",
+          "flex items-center justify-between rounded-[1.75rem] border px-4 py-3 sm:px-5 sm:py-2.5 transition-all duration-500",
           isScrolled
-            ? "border-black/[0.08] bg-white/95 shadow-[0_8px_30px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.6)]"
-            : "border-black/[0.04] bg-white/70 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+            ? "border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+            : "border-neutral-200/90 bg-white shadow-[0_6px_18px_rgba(0,0,0,0.06)]"
         )}>
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className={cn(
-              "flex w-auto items-center justify-center transition-all duration-500 group-hover:scale-105",
-              isScrolled ? "h-[32px]" : "h-[36px]"
+              "relative flex w-auto items-center justify-center transition-all duration-500 group-hover:scale-[1.02]",
+              isScrolled ? "h-[40px] sm:h-[42px]" : "h-[44px] sm:h-[48px]"
             )}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Empire Cars" className="h-full w-auto object-contain" />
+              <Image
+                src="/logo.png"
+                alt="Empire Cars"
+                width={3168}
+                height={1344}
+                priority
+                className="h-full w-auto object-contain mix-blend-multiply"
+              />
             </div>
           </Link>
 
@@ -137,7 +144,7 @@ export default function Header() {
 
             {/* Mobile Menu Toggle */}
             <button
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-100 text-neutral-700 transition-colors hover:bg-neutral-200 md:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 transition-colors hover:bg-neutral-50 md:hidden"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <AnimatePresence mode="wait">

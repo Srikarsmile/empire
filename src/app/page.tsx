@@ -22,7 +22,7 @@ export default function Home() {
     <div className="min-h-screen selection:bg-black/10 overflow-x-hidden">
 
       {/* Stark Utility Hero (Uber Style) */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-32 overflow-visible px-4 sm:px-6 mx-auto max-w-7xl">
+      <section className="relative pt-36 pb-16 md:pt-40 md:pb-32 overflow-visible px-4 sm:px-6 mx-auto max-w-7xl">
         <div className="flex flex-col-reverse xl:flex-row gap-16 xl:gap-8 items-center xl:items-start justify-between">
           
           <div className="flex flex-col gap-8 w-full xl:w-1/2 max-w-xl shrink-0 z-10 relative">
@@ -40,7 +40,7 @@ export default function Home() {
             <HeroBookingWidget />
           </div>
 
-          <div className="relative w-full xl:w-1/2 h-[450px] sm:h-[550px] lg:h-[650px] flex items-center justify-center xl:justify-end xl:pl-12 xl:-mt-12">
+          <div className="relative w-full xl:w-1/2 h-[360px] sm:h-[520px] lg:h-[650px] pt-10 sm:pt-6 xl:pt-0 flex items-center justify-center xl:justify-end xl:pl-12 xl:-mt-12">
              <HeroCardStack items={cardStackItems} />
           </div>
 

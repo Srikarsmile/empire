@@ -7,42 +7,106 @@ interface HeroCardStackProps {
   items: CardStackItem[];
 }
 
+function getDimensions(viewportWidth?: number) {
+  const width = viewportWidth ?? 1280;
+
+  if (width < 640) {
+    return {
+      width: 244,
+      height: 320,
+      overlap: 0.78,
+      spreadDeg: 10,
+      maxVisible: 3,
+      depthPx: 36,
+      tiltXDeg: 0,
+      activeLiftPx: 10,
+    };
+  }
+
+  if (width < 1024) {
+    return {
+      width: 360,
+      height: 440,
+      overlap: 0.72,
+      spreadDeg: 14,
+      maxVisible: 5,
+      depthPx: 56,
+      tiltXDeg: 4,
+      activeLiftPx: 16,
+    };
+  }
+
+  return {
+    width: 440,
+    height: 520,
+    overlap: 0.76,
+    spreadDeg: 14,
+    maxVisible: 5,
+    depthPx: 72,
+    tiltXDeg: 6,
+    activeLiftPx: 18,
+  };
+}
+
 export default function HeroCardStack({ items }: HeroCardStackProps) {
-  const [dimensions, setDimensions] = useState({ width: 300, height: 400, overlap: 0.6, spreadDeg: 30 });
-  const [mounted, setMounted] = useState(false);
+  const [dimensions, setDimensions] = useState(() => getDimensions());
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- subscribing to window resize is a valid effect pattern
-    setMounted(true);
+    let frameId = 0;
+
     const updateDimensions = () => {
-      setDimensions({
-        width: window.innerWidth < 640 ? 280 : window.innerWidth < 1024 ? 380 : 440,
-        height: window.innerWidth < 640 ? 380 : window.innerWidth < 1024 ? 460 : 520,
-        overlap: window.innerWidth < 640 ? 0.5 : window.innerWidth < 1024 ? 0.72 : 0.8,
-        spreadDeg: window.innerWidth < 640 ? 40 : 25,
+      const nextDimensions = getDimensions(window.innerWidth);
+
+      setDimensions((current) => {
+        if (
+          current.width === nextDimensions.width &&
+          current.height === nextDimensions.height &&
+          current.overlap === nextDimensions.overlap &&
+          current.spreadDeg === nextDimensions.spreadDeg &&
+          current.maxVisible === nextDimensions.maxVisible &&
+          current.depthPx === nextDimensions.depthPx &&
+          current.tiltXDeg === nextDimensions.tiltXDeg &&
+          current.activeLiftPx === nextDimensions.activeLiftPx
+        ) {
+          return current;
+        }
+
+        return nextDimensions;
       });
     };
 
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
+    const onResize = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(updateDimensions);
+    };
 
-  if (!mounted) return null; // Prevent hydration mismatch
+    updateDimensions();
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
 
   return (
     <CardStack
       items={items}
       initialIndex={0}
       autoAdvance={true}
-      intervalMs={3000}
+      intervalMs={4200}
       pauseOnHover={true}
       showDots={true}
       cardWidth={dimensions.width}
       cardHeight={dimensions.height}
       overlap={dimensions.overlap}
       spreadDeg={dimensions.spreadDeg}
-      maxVisible={5}
+      depthPx={dimensions.depthPx}
+      tiltXDeg={dimensions.tiltXDeg}
+      activeLiftPx={dimensions.activeLiftPx}
+      springStiffness={180}
+      springDamping={24}
+      maxVisible={dimensions.maxVisible}
     />
   );
 }

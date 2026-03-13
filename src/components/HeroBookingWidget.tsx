@@ -27,7 +27,7 @@ export default function HeroBookingWidget() {
   };
 
   return (
-    <div className="bg-white border-2 border-neutral-100 rounded-2xl p-6 shadow-sm flex flex-col gap-4 w-full">
+    <div className="bg-white border-2 border-neutral-100 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 w-full">
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
           Pick-up Location
@@ -42,7 +42,7 @@ export default function HeroBookingWidget() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
             Pick-up Date
@@ -51,7 +51,7 @@ export default function HeroBookingWidget() {
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="w-full bg-neutral-100 rounded-xl h-14 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full min-w-0 bg-neutral-100 rounded-xl h-14 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black"
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -62,7 +62,7 @@ export default function HeroBookingWidget() {
             type="date"
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
-            className="w-full bg-neutral-100 rounded-xl h-14 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full min-w-0 bg-neutral-100 rounded-xl h-14 px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black"
           />
         </div>
       </div>
