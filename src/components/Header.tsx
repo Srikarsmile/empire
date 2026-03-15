@@ -62,8 +62,8 @@ export default function Header() {
         <div className={cn(
           "flex items-center justify-between rounded-[1.75rem] border px-4 py-3 sm:px-5 sm:py-2.5 transition-all duration-500",
           isScrolled
-            ? "border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
-            : "border-neutral-200/90 bg-white shadow-[0_6px_18px_rgba(0,0,0,0.06)]"
+            ? "border-[var(--border)] bg-[rgba(255,251,245,0.97)] shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+            : "border-[var(--border)] bg-[rgba(255,251,245,0.97)] shadow-[0_6px_18px_rgba(0,0,0,0.06)]"
         )}>
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
@@ -88,14 +88,14 @@ export default function Header() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="relative px-4 py-2 text-[13px] font-semibold tracking-wide uppercase text-neutral-500 transition-colors hover:text-neutral-900 rounded-lg"
+                className="relative px-4 py-2 text-[13px] font-semibold tracking-wide uppercase text-[var(--ink-500)] transition-colors hover:text-[var(--ink-900)] rounded-lg"
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
                 {hoveredIndex === index && (
                   <motion.div
                     layoutId="nav-hover"
-                    className="absolute inset-0 -z-10 rounded-lg bg-neutral-100/80"
+                    className="absolute inset-0 -z-10 rounded-lg bg-[var(--accent-surface)]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -121,7 +121,7 @@ export default function Header() {
                 )}
                 <button
                   onClick={logout}
-                  className="text-xs font-semibold tracking-wide uppercase text-neutral-400 hover:text-neutral-700 transition-colors"
+                  className="text-xs font-semibold tracking-wide uppercase text-[var(--ink-500)] hover:text-[var(--ink-700)] transition-colors"
                 >
                   Log out
                 </button>
@@ -129,7 +129,7 @@ export default function Header() {
             ) : (
               <button
                 onClick={openAuth}
-                className="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 text-[13px] font-semibold tracking-wide text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100/80 transition-all"
+                className="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 text-[13px] font-semibold tracking-wide text-[var(--ink-500)] hover:text-[var(--ink-900)] hover:bg-[var(--accent-surface)] transition-all"
               >
                 Log in
               </button>
@@ -137,14 +137,14 @@ export default function Header() {
             
             <Link
               href="/reservations"
-              className="hidden sm:flex h-9 items-center justify-center rounded-lg bg-neutral-900 px-5 text-[13px] font-bold tracking-wide text-white transition-all hover:bg-black hover:shadow-md active:scale-[0.97] duration-200"
+              className="hidden sm:flex h-9 items-center justify-center rounded-lg bg-[var(--accent)] px-5 text-[13px] font-bold tracking-wide text-white transition-all hover:bg-[var(--accent-light)] hover:shadow-md active:scale-[0.97] duration-200"
             >
               Reserve
             </Link>
 
             {/* Mobile Menu Toggle */}
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 transition-colors hover:bg-neutral-50 md:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg)] text-neutral-700 transition-colors hover:bg-[var(--surface-soft)] md:hidden"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <AnimatePresence mode="wait">
@@ -173,7 +173,7 @@ export default function Header() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="absolute inset-x-4 top-[4.5rem] p-2 md:hidden origin-top"
           >
-            <div className="rounded-2xl border border-[#E5E5E5] bg-white/95 p-4 shadow-xl backdrop-blur-xl dark:border-gray-800 dark:bg-gray-900/95 overflow-hidden">
+            <div className="rounded-2xl border border-[var(--border)] bg-[rgba(255,251,245,0.97)] p-4 shadow-xl backdrop-blur-xl overflow-hidden">
               <nav className="flex flex-col gap-1">
                 {NAV_LINKS.map((item, i) => (
                   <motion.div
@@ -185,7 +185,7 @@ export default function Header() {
                     <Link
                       href={item.href}
                       onClick={() => setMenuOpen(false)}
-                      className="block rounded-xl px-4 py-3.5 text-base font-semibold text-[#111] transition-colors hover:bg-[#F5F5F5]"
+                      className="block rounded-xl px-4 py-3.5 text-base font-semibold text-[var(--ink-900)] transition-colors hover:bg-[var(--accent-surface)]"
                     >
                       {item.label}
                     </Link>
@@ -215,7 +215,7 @@ export default function Header() {
                           setMenuOpen(false);
                           logout();
                         }}
-                        className="block w-full text-left rounded-xl px-4 py-3 text-base font-semibold text-gray-500 transition-colors hover:bg-gray-50"
+                        className="block w-full text-left rounded-xl px-4 py-3 text-base font-semibold text-[var(--ink-500)] transition-colors hover:bg-[var(--surface-soft)]"
                       >
                         Log out
                       </button>
@@ -226,7 +226,7 @@ export default function Header() {
                         setMenuOpen(false);
                         openAuth();
                       }}
-                      className="block w-full text-left rounded-xl px-4 py-3.5 text-base font-semibold text-[#111] transition-colors hover:bg-[#F5F5F5]"
+                      className="block w-full text-left rounded-xl px-4 py-3.5 text-base font-semibold text-[var(--ink-900)] transition-colors hover:bg-[var(--accent-surface)]"
                     >
                       Log in
                     </button>
@@ -242,7 +242,7 @@ export default function Header() {
                   <Link
                     href="/reservations"
                     onClick={() => setMenuOpen(false)}
-                    className="flex w-full items-center justify-center rounded-xl bg-[#111] px-4 py-3.5 text-base font-bold text-white transition-colors hover:bg-[#333]"
+                    className="flex w-full items-center justify-center rounded-xl bg-[var(--accent)] px-4 py-3.5 text-base font-bold text-white transition-colors hover:bg-[var(--accent-light)]"
                   >
                     Reserve Now
                   </Link>

@@ -1,13 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { AnimatedCard } from '@/components/animations/AnimatedCard';
 import { FadeInUp } from '@/components/animations/MotionWrapper';
-import { SlidersHorizontal, X as XIcon, Car } from 'lucide-react';
+import { SlidersHorizontal, X as XIcon, Car, Search } from 'lucide-react';
 import type { DateRange } from '@/data/vehicleMeta';
 
 interface Vehicle {
@@ -79,6 +79,87 @@ function getBookedSet(ranges: DateRange[]) {
   return set;
 }
 
+function FleetCard({
+  vehicle,
+  isFav,
+  onToggleFavorite,
+  index,
+}: {
+  vehicle: Vehicle;
+  isFav: boolean;
+  onToggleFavorite: (id: string) => void;
+  index: number;
+}) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  return (
+    <AnimatedCard
+      className="group relative flex flex-col bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:border-[var(--accent)] transition-colors duration-200 overflow-hidden"
+      index={index}
+    >
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)]">
+        <span
+          className={`skeleton absolute inset-0 z-10 transition-opacity duration-500 ${imgLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        />
+        <Image
+          src={vehicle.images[0]}
+          alt={vehicle.title}
+          fill
+          priority={index < 2}
+          sizes="(max-width: 1100px) 100vw, (max-width: 1400px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          onLoad={() => setImgLoaded(true)}
+        />
+        <button
+          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] transition cursor-pointer hover:bg-[var(--surface-soft)]"
+          onClick={(event) => {
+            event.preventDefault();
+            onToggleFavorite(vehicle.id);
+          }}
+          aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <svg
+            className={`w-5 h-5 ${isFav ? 'fill-[var(--accent-strong)]' : 'fill-none stroke-[var(--ink-900)] stroke-2'}`}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex flex-col flex-grow p-5">
+        <div className="flex justify-between items-start gap-4 mb-1">
+          <h3 className="text-lg font-bold text-[var(--ink-900)] leading-tight">{vehicle.title}</h3>
+          <div className="flex items-center gap-1 text-sm font-bold bg-[var(--accent-surface)] text-[var(--accent-strong)] px-2 py-1 rounded">
+            ★ {vehicle.rating.toFixed(1)}
+          </div>
+        </div>
+
+        <div className="text-sm font-medium text-[var(--ink-500)] mb-4">
+          {vehicle.location} • {vehicle.capacity} seats
+        </div>
+
+        <div className="flex items-center justify-between mt-auto">
+          <div>
+            <strong className="text-2xl font-bold text-[var(--ink-900)]">${vehicle.price}</strong>
+            <span className="text-[var(--ink-500)] font-medium text-sm ml-1">/ day</span>
+          </div>
+          <Link
+            href={`/fleet/${vehicle.id}`}
+            className="inline-flex items-center justify-center h-10 px-6 text-sm font-bold text-white transition bg-[var(--accent)] rounded-xl hover:bg-[var(--accent-light)] active:bg-[var(--accent-strong)]"
+          >
+            Book
+          </Link>
+        </div>
+      </div>
+    </AnimatedCard>
+  );
+}
+
 export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
   const searchParams = useSearchParams();
 
@@ -89,17 +170,16 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
   const [maxPrice, setMaxPrice] = useState(160);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('recommended');
-  const [favorites, setFavorites] = useState<string[]>(() => {
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('favorites');
-        if (saved) return JSON.parse(saved);
-      }
+      const saved = localStorage.getItem('favorites');
+      if (saved) setFavorites(JSON.parse(saved));
     } catch {
-      // fallback
+      // ignore
     }
-    return [];
-  });
+  }, []);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -170,12 +250,45 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
     return result;
   }, [checkIn, checkOut, favorites, favoritesOnly, guests, maxPrice, vehicles, searchQuery, selectedAmenities, sortBy]);
 
+  useEffect(() => {
+    document.body.style.overflow = mobileFiltersOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileFiltersOpen]);
+
+  const activeFilterCount =
+    selectedAmenities.length +
+    (maxPrice < 160 ? 1 : 0) +
+    (checkIn ? 1 : 0) +
+    (favoritesOnly ? 1 : 0) +
+    (searchQuery.trim() ? 1 : 0);
+
   return (
     <section className="explorer-section">
       <div className="shell mt-4">
         <FadeInUp>
-          <div className="flex flex-wrap items-center gap-3 mb-8 pb-8 border-b border-neutral-200">
-              <span className="text-sm font-bold tracking-widest uppercase text-neutral-500 md:mr-4">Filters</span>
+          <div className="relative mb-4">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-500)] pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search by name, location, or feature…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-11 rounded-xl border border-[var(--border)] bg-[var(--surface)] pl-10 pr-10 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-500)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10 transition-all duration-200"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ink-500)] hover:text-[var(--ink-700)]"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mb-8 pb-8 border-b border-[var(--border)]">
+              <span className="text-sm font-bold tracking-widest uppercase text-[var(--ink-500)] md:mr-4">Filters</span>
               {AMENITIES.map((amenity) => (
                 <button
                   key={amenity}
@@ -186,7 +299,7 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
                   {amenity}
                 </button>
               ))}
-              <button className="chip ghost hover:bg-neutral-100 ml-auto" onClick={clearFilters} type="button">
+              <button className="chip ghost hover:bg-[var(--surface-soft)] ml-auto" onClick={clearFilters} type="button">
                 Clear
               </button>
           </div>
@@ -200,16 +313,27 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filters & Sort
+            {activeFilterCount > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--accent)] text-white text-[11px] font-bold leading-none">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
 
-          {mobileFiltersOpen ? (
-            <button
-              type="button"
-              className="mobile-filter-overlay"
-              aria-label="Close filters"
-              onClick={() => setMobileFiltersOpen(false)}
-            />
-          ) : null}
+          <AnimatePresence>
+            {mobileFiltersOpen && (
+              <motion.button
+                type="button"
+                className="mobile-filter-overlay"
+                aria-label="Close filters"
+                onClick={() => setMobileFiltersOpen(false)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              />
+            )}
+          </AnimatePresence>
 
           <aside className={`filter-rail ${mobileFiltersOpen ? 'open' : ''}`}>
             <div className="filter-mobile-head">
@@ -296,7 +420,7 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <Car className="w-10 h-10 mx-auto text-neutral-400" />
+                  <Car className="w-10 h-10 mx-auto text-[var(--ink-500)]" />
                   <h3>No vehicles match these filters</h3>
                   <p>Try widening your budget, lowering passengers, or removing one option filter.</p>
                   <button className="btn-primary" onClick={clearFilters}>
@@ -311,57 +435,15 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
                   exit={{ opacity: 0.98 }}
                   transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  {filteredVehicles.map((vehicle, index) => {
-                    const isFav = favorites.includes(vehicle.id);
-
-                    return (
-                      <AnimatedCard key={vehicle.id} className="group relative flex flex-col bg-white rounded-xl border border-neutral-200 hover:border-black transition-colors duration-200 overflow-hidden" index={index}>
-                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100 border-b border-neutral-200">
-                          <Image
-                            src={vehicle.images[0]}
-                            alt={vehicle.title}
-                            fill
-                            priority={index < 2}
-                            sizes="(max-width: 1100px) 100vw, (max-width: 1400px) 50vw, 33vw"
-                            className="object-cover"
-                          />
-                          <button
-                            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-white border border-neutral-200 transition cursor-pointer hover:bg-neutral-100"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              toggleFavorite(vehicle.id);
-                            }}
-                            aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
-                          >
-                            <svg className={`w-5 h-5 ${isFav ? 'fill-black' : 'fill-none stroke-black stroke-2'}`} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
-                          </button>
-                        </div>
-
-                        <div className="flex flex-col flex-grow p-5">
-                          <div className="flex justify-between items-start gap-4 mb-1">
-                             <h3 className="text-lg font-bold text-black leading-tight">{vehicle.title}</h3>
-                             <div className="flex items-center gap-1 text-sm font-bold bg-neutral-100 px-2 py-1 rounded">
-                                ★ {vehicle.rating.toFixed(1)}
-                             </div>
-                          </div>
-                          
-                          <div className="text-sm font-medium text-neutral-500 mb-4">
-                            {vehicle.location} • {vehicle.capacity} seats
-                          </div>
-
-                          <div className="flex items-center justify-between mt-auto">
-                            <div>
-                              <strong className="text-2xl font-bold text-black">${vehicle.price}</strong>
-                              <span className="text-neutral-500 font-medium text-sm ml-1">/ day</span>
-                            </div>
-                            <Link href={`/fleet/${vehicle.id}`} className="inline-flex items-center justify-center h-10 px-6 text-sm font-bold text-white transition bg-black rounded-xl hover:bg-neutral-800">
-                              Book
-                            </Link>
-                          </div>
-                        </div>
-                      </AnimatedCard>
-                    );
-                  })}
+                  {filteredVehicles.map((vehicle, index) => (
+                    <FleetCard
+                      key={vehicle.id}
+                      vehicle={vehicle}
+                      isFav={favorites.includes(vehicle.id)}
+                      onToggleFavorite={toggleFavorite}
+                      index={index}
+                    />
+                  ))}
                 </motion.div>
               )}
             </AnimatePresence>

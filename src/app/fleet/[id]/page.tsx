@@ -1,9 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { FadeInUp, ScaleIn } from '@/components/animations/MotionWrapper';
+import { FadeInUp } from '@/components/animations/MotionWrapper';
 import { getVehicleById } from '@/lib/vehicleData';
 import { ArrowLeft, MapPin, Star, CheckCircle2, Plane, ShieldCheck, Headset } from 'lucide-react';
+import GalleryLightbox from './GalleryLightbox';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('en-US', {
@@ -46,18 +47,7 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
           </div>
         </FadeInUp>
 
-        <ScaleIn delay={0.1}>
-          <div className="gallery-grid">
-            <div className="gallery-main">
-              <Image src={vehicle.images[0]} alt={vehicle.title} fill priority sizes="(max-width: 900px) 100vw, 60vw" />
-            </div>
-            {vehicle.images.slice(1, 5).map((image, index) => (
-              <div key={image} className="gallery-thumb">
-                <Image src={image} alt={`${vehicle.title} view ${index + 2}`} fill sizes="(max-width: 900px) 50vw, 20vw" />
-              </div>
-            ))}
-          </div>
-        </ScaleIn>
+        <GalleryLightbox images={vehicle.images} title={vehicle.title} />
 
         <div className="property-layout">
           <FadeInUp className="property-content">

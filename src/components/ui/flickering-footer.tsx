@@ -317,26 +317,26 @@ export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
   const year = currentYear ?? new Date().getFullYear();
 
   return (
-    <footer id="footer" className="w-full relative bg-white pb-0 overflow-hidden pt-8 border-t border-neutral-100">
+    <footer id="footer" className="w-full relative bg-[var(--surface-soft)] pb-0 overflow-hidden pt-8 border-t border-[var(--border)]">
       <div className="mx-auto max-w-7xl flex flex-col md:flex-row md:items-start md:justify-between px-6 lg:px-8 pb-4 z-10 relative">
         <div className="flex flex-col items-start justify-start gap-y-5 max-w-sm mx-0">
           <Link href="/" className="flex items-center gap-3">
-             <div className="flex h-16 w-auto p-2 bg-white rounded-xl border-2 border-neutral-200/20 shadow-sm items-center justify-center">
+             <div className="flex h-16 w-auto p-2 bg-[var(--surface)] rounded-xl border-2 border-[var(--border)] shadow-sm items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.png" alt="Empire Cars Logo" className="h-full w-auto object-contain" />
              </div>
           </Link>
-          <p className="text-neutral-500 font-medium leading-relaxed">
+          <p className="text-[var(--ink-500)] font-medium leading-relaxed">
             {siteConfig.hero.description}
           </p>
           <div className="flex gap-4 mt-2">
-             <a href="#" className="h-10 w-10 bg-neutral-100 text-black flex items-center justify-center rounded-full hover:bg-neutral-200 transition-colors">
+             <a href="#" className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
                <Instagram className="w-5 h-5" />
              </a>
-             <a href="#" className="h-10 w-10 bg-neutral-100 text-black flex items-center justify-center rounded-full hover:bg-neutral-200 transition-colors">
+             <a href="#" className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
                <Twitter className="w-5 h-5" />
              </a>
-             <a href="#" className="h-10 w-10 bg-neutral-100 text-black flex items-center justify-center rounded-full hover:bg-neutral-200 transition-colors">
+             <a href="#" className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
                <Facebook className="w-5 h-5" />
              </a>
           </div>
@@ -345,13 +345,13 @@ export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 gap-y-12">
             {siteConfig.footerLinks.map((column, columnIndex) => (
               <ul key={columnIndex} className="flex flex-col gap-y-4">
-                <li className="mb-1 text-sm font-bold tracking-widest uppercase text-black">
+                <li className="mb-1 text-sm font-bold tracking-widest uppercase text-[var(--ink-900)]">
                   {column.title}
                 </li>
                 {column.links.map((link) => (
                   <li
                     key={link.id}
-                    className="group inline-flex cursor-pointer items-center justify-start gap-1 text-[15px]/snug text-neutral-500 font-medium hover:text-black transition-colors"
+                    className="group inline-flex cursor-pointer items-center justify-start gap-1 text-[15px]/snug text-[var(--ink-500)] font-medium hover:text-[var(--accent)] transition-colors"
                   >
                     <Link href={link.url}>{link.title}</Link>
                     <div className="flex size-4 items-center justify-center translate-x-0 transform opacity-0 transition-all duration-300 ease-out group-hover:translate-x-1 group-hover:opacity-100">
@@ -367,13 +367,13 @@ export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
 
       {/* Copyright line */}
       <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-4 z-10 relative">
-        <p className="text-sm text-neutral-400 font-medium">
+        <p className="text-sm text-[var(--ink-500)] font-medium">
           © {year} Empire Cars Sosua. All rights reserved.
         </p>
       </div>
       
       <div className="w-full h-44 md:h-64 lg:h-72 relative mt-4 z-0 pointer-events-none select-none overflow-hidden pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/80 to-white z-10 from-20% lg:from-30%" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#FEF6EE]/80 to-[#FEF6EE] z-10 from-20% lg:from-30%" />
         <div className={cn("absolute inset-0", mobile ? "mx-2" : "mx-6")}>
           <FlickeringGrid
             text={mobile ? "Empire Cars" : tablet ? "Empire Cars" : "Empire Cars"}
@@ -381,7 +381,7 @@ export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
             className="h-full w-full opacity-60"
             squareSize={mobile ? 2 : 3}
             gridGap={tablet ? 2 : 3}
-            color="#000000"
+            color="#E8603C"
             maxOpacity={0.10}
             flickerChance={0.08}
           />

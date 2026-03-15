@@ -66,7 +66,7 @@ export default function InteractiveHoverButton({
     <button
       type={type}
       className={cn(
-        "group bg-white relative flex min-w-40 items-center justify-center overflow-hidden rounded-full border border-gray-200 p-2 px-6 font-semibold shadow-sm text-gray-900 transition-colors",
+        "group bg-[var(--ink-900)] relative flex min-w-40 items-center justify-center overflow-hidden rounded-full border border-[var(--ink-900)] p-2 px-6 font-semibold shadow-sm text-white transition-colors",
         status === "loading" && "px-2", // Circle shape when loading
         classes
       )}
@@ -83,7 +83,7 @@ export default function InteractiveHoverButton({
         >
           <div
             className={cn(
-              "bg-black h-2 w-2 rounded-full transition-all duration-500 group-hover:scale-[150]",
+              "bg-[var(--accent)] h-2 w-2 rounded-full transition-all duration-500 group-hover:scale-[150]",
               !isIdle && "scale-[150]"
             )}
           />

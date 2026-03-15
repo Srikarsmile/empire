@@ -53,18 +53,18 @@ export default function HeroBookingWidget() {
   return (
     <div
       ref={containerRef}
-      className="bg-white border-2 border-neutral-100 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 w-full"
+      className="bg-[var(--surface)] border-2 border-[var(--border)] rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 w-full"
     >
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
+        <label className="text-xs font-bold tracking-widest uppercase text-[var(--ink-500)]">
           Pick-up Location
         </label>
         <div className="relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-black" />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[var(--accent)]" />
           <input
             type="text"
             placeholder="POP Airport, Sosua Villa..."
-            className="w-full bg-neutral-100 rounded-xl h-14 pl-10 pr-4 font-semibold text-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full bg-[var(--surface-soft)] rounded-xl h-14 pl-10 pr-4 font-semibold text-[var(--ink-900)] placeholder:text-[var(--ink-500)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           />
         </div>
       </div>
@@ -76,32 +76,32 @@ export default function HeroBookingWidget() {
         )}
       >
         <div className="min-w-0 flex flex-col gap-1.5">
-          <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
+          <label className="text-xs font-bold tracking-widest uppercase text-[var(--ink-500)]">
             Pick-up Date
           </label>
-          <div className="hero-booking-date-wrap min-w-0 w-full overflow-hidden rounded-xl bg-neutral-100">
+          <div className="hero-booking-date-wrap min-w-0 w-full overflow-hidden rounded-xl bg-[var(--surface-soft)]">
             <input
               type="date"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
               className={cn(
-                "hero-booking-date-input block h-14 w-full min-w-0 max-w-full border-0 bg-transparent px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black",
+                "hero-booking-date-input block h-14 w-full min-w-0 max-w-full border-0 bg-transparent px-4 font-semibold text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]",
                 useTwoColumns ? "text-sm" : "text-[15px]",
               )}
             />
           </div>
         </div>
         <div className="min-w-0 flex flex-col gap-1.5">
-          <label className="text-xs font-bold tracking-widest uppercase text-neutral-500">
+          <label className="text-xs font-bold tracking-widest uppercase text-[var(--ink-500)]">
             Return Date
           </label>
-          <div className="hero-booking-date-wrap min-w-0 w-full overflow-hidden rounded-xl bg-neutral-100">
+          <div className="hero-booking-date-wrap min-w-0 w-full overflow-hidden rounded-xl bg-[var(--surface-soft)]">
             <input
               type="date"
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
               className={cn(
-                "hero-booking-date-input block h-14 w-full min-w-0 max-w-full border-0 bg-transparent px-4 font-semibold text-black focus:outline-none focus:ring-2 focus:ring-black",
+                "hero-booking-date-input block h-14 w-full min-w-0 max-w-full border-0 bg-transparent px-4 font-semibold text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]",
                 useTwoColumns ? "text-sm" : "text-[15px]",
               )}
             />
