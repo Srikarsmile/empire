@@ -1,10 +1,10 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FadeInUp } from '@/components/animations/MotionWrapper';
 import { getVehicleById } from '@/lib/vehicleData';
 import { ArrowLeft, MapPin, Star, CheckCircle2, Plane, ShieldCheck, Headset } from 'lucide-react';
 import GalleryLightbox from './GalleryLightbox';
+import ReviewForm from './ReviewForm';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('en-US', {
@@ -71,13 +71,17 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
             <section className="info-card reviews-card">
               <div className="reviews-header-row">
                 <h2>Driver Reviews</h2>
-                <p>
-                  <Star className="inline w-4 h-4 fill-current" /> {vehicle.rating.toFixed(2)} ({vehicle.reviewCount})
-                </p>
+                {vehicle.reviewCount > 0 && (
+                  <p>
+                    <Star className="inline w-4 h-4 fill-current" /> {vehicle.rating.toFixed(2)} ({vehicle.reviewCount})
+                  </p>
+                )}
               </div>
 
               <div className="reviews-list">
-                {vehicle.reviews.map((review) => (
+                {vehicle.reviews.length === 0 ? (
+                  <p className="muted-label">No reviews yet. Be the first to leave one below.</p>
+                ) : vehicle.reviews.map((review) => (
                   <article key={review.id} className="review-item">
                     <div className="review-top-row">
                       <div>
@@ -90,25 +94,11 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
                     </div>
 
                     <p className="review-comment">{review.comment}</p>
-
-                    <div className="review-photos">
-                      {review.photos.map((photo, index) => (
-                        <div key={`${review.id}-${index}`} className="review-photo">
-                          <Image src={photo} alt={`Guest photo ${index + 1}`} fill sizes="140px" />
-                        </div>
-                      ))}
-                    </div>
-
-                    {review.hostResponse ? (
-                      <div className="host-response">
-                        <strong>{review.hostResponse.hostName} replied</strong>
-                        <small>{formatDate(review.hostResponse.date)}</small>
-                        <p>{review.hostResponse.message}</p>
-                      </div>
-                    ) : null}
                   </article>
                 ))}
               </div>
+
+              <ReviewForm vehicleId={vehicle.id} />
             </section>
           </FadeInUp>
 
