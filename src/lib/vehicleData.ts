@@ -43,12 +43,15 @@ function toEnriched(v: {
 }
 
 export async function getAllVehicles(): Promise<EnrichedVehicle[]> {
-  const vehicles = await prisma.vehicle.findMany({ orderBy: { createdAt: 'asc' } });
+  const vehicles = await prisma.vehicle.findMany({
+    where: { paused: false },
+    orderBy: { createdAt: 'asc' },
+  });
   return vehicles.map(toEnriched);
 }
 
 export async function getVehicleById(id: string): Promise<EnrichedVehicle | null> {
   const v = await prisma.vehicle.findUnique({ where: { id } });
-  if (!v) return null;
+  if (!v || v.paused) return null;
   return toEnriched(v);
 }
