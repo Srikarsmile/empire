@@ -5,28 +5,31 @@ import { Star } from 'lucide-react';
 
 export default function ReviewForm({ vehicleId }: { vehicleId: string }) {
   const [guestName, setGuestName] = useState('');
+  const [email, setEmail] = useState('');
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [comment, setComment] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!guestName.trim() || !comment.trim() || rating < 1) return;
+    if (!guestName.trim() || !email.trim() || !comment.trim() || rating < 1) return;
 
     setStatus('submitting');
+    setErrorMsg('');
+
     const res = await fetch(`/api/vehicles/${vehicleId}/reviews`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guestName, rating, comment }),
+      body: JSON.stringify({ guestName, email, rating, comment }),
     });
 
     if (res.ok) {
       setStatus('success');
-      setGuestName('');
-      setComment('');
-      setRating(0);
     } else {
+      const data = await res.json();
+      setErrorMsg(data.error ?? 'Something went wrong. Please try again.');
       setStatus('error');
     }
   }
@@ -34,7 +37,7 @@ export default function ReviewForm({ vehicleId }: { vehicleId: string }) {
   if (status === 'success') {
     return (
       <div className="review-submitted">
-        <p>Thanks for your review! It will appear shortly.</p>
+        <p>Thanks for your review! It will appear shortly after the page refreshes.</p>
       </div>
     );
   }
@@ -50,6 +53,17 @@ export default function ReviewForm({ vehicleId }: { vehicleId: string }) {
           placeholder="John Doe"
           value={guestName}
           onChange={(e) => setGuestName(e.target.value)}
+          required
+        />
+      </label>
+
+      <label className="field-block">
+        <span>Booking email</span>
+        <input
+          type="email"
+          placeholder="email used when you booked"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
       </label>
@@ -89,17 +103,17 @@ export default function ReviewForm({ vehicleId }: { vehicleId: string }) {
         />
       </label>
 
-      {status === 'error' && (
-        <p className="error-text">Something went wrong. Please try again.</p>
-      )}
+      {status === 'error' && <p className="error-text">{errorMsg}</p>}
 
       <button
         type="submit"
         className="btn-primary"
-        disabled={status === 'submitting' || !guestName.trim() || !comment.trim() || rating < 1}
+        disabled={status === 'submitting' || !guestName.trim() || !email.trim() || !comment.trim() || rating < 1}
       >
         {status === 'submitting' ? 'Submitting...' : 'Submit review'}
       </button>
+
+      <p className="muted-label">Only customers who have booked this vehicle can leave a review.</p>
     </form>
   );
 }
