@@ -2,27 +2,26 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Search, Edit2, Trash2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, PauseCircle, PlayCircle } from "lucide-react";
 
 interface VehicleRecord {
   id: string;
   title: string;
   price: number;
   capacity: number;
-  description: string;
-  amenities: string[];
   images: string[];
-  location: string;
   transmission?: string;
+  paused: boolean;
 }
 
 export default function FleetManagement() {
   const [cars, setCars] = useState<VehicleRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/vehicles')
+    fetch('/api/vehicles?all=1')
       .then((r) => r.json())
       .then(setCars)
       .catch(() => {});
@@ -43,19 +42,30 @@ export default function FleetManagement() {
     }
   };
 
+  const handleTogglePause = async (id: string, currentlyPaused: boolean) => {
+    setTogglingId(id);
+    const res = await fetch(`/api/vehicles/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paused: !currentlyPaused }),
+    });
+    if (res.ok) {
+      setCars((prev) => prev.map((c) => c.id === id ? { ...c, paused: !currentlyPaused } : c));
+    }
+    setTogglingId(null);
+  };
+
   const filteredCars = cars.filter((car) =>
     car.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Fleet Management</h1>
           <p className="mt-2 text-sm text-gray-500">Add, update, or remove vehicles from your rental inventory.</p>
         </div>
-
         <Link
           href="/admin/fleet/new"
           className="flex items-center justify-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-900 transition-colors shadow-sm w-full sm:w-auto mt-4 sm:mt-0"
@@ -65,7 +75,6 @@ export default function FleetManagement() {
         </Link>
       </div>
 
-      {/* Search */}
       <div className="flex items-center border border-gray-200 bg-white rounded-xl px-4 py-2 shadow-sm w-full sm:max-w-md">
         <Search className="w-5 h-5 text-gray-400" />
         <input
@@ -77,30 +86,53 @@ export default function FleetManagement() {
         />
       </div>
 
-      {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
         {filteredCars.map((car) => (
-          <div key={car.id} className="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            {/* Image Container */}
+          <div
+            key={car.id}
+            className={`group bg-white rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col ${
+              car.paused ? 'border-amber-200 opacity-70' : 'border-gray-200'
+            }`}
+          >
+            {/* Image */}
             <div className="aspect-[4/3] bg-gray-100 relative">
               {car.images?.[0] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={car.images[0]} alt={car.title} className="w-full h-full object-cover" />
+                <img src={car.images[0]} alt={car.title} className={`w-full h-full object-cover ${car.paused ? 'grayscale' : ''}`} />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
-                  No Image Available
-                </div>
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">No Image</div>
               )}
 
-              {/* Status Badge */}
+              {/* Status badge */}
               <div className="absolute top-3 left-3">
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 shadow-sm backdrop-blur-md">
-                  Available
-                </span>
+                {car.paused ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 shadow-sm">
+                    <PauseCircle className="w-3 h-3" /> Paused
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 shadow-sm">
+                    Available
+                  </span>
+                )}
               </div>
 
-              {/* Action Menu (Visible on hover) */}
+              {/* Action buttons */}
               <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                <button
+                  onClick={() => handleTogglePause(car.id, car.paused)}
+                  disabled={togglingId === car.id}
+                  title={car.paused ? 'Resume listing' : 'Pause listing'}
+                  className={`p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm transition-colors disabled:opacity-50 ${
+                    car.paused
+                      ? 'text-green-600 hover:bg-green-50'
+                      : 'text-amber-500 hover:bg-amber-50'
+                  }`}
+                >
+                  {car.paused
+                    ? <PlayCircle className="w-4 h-4" />
+                    : <PauseCircle className="w-4 h-4" />
+                  }
+                </button>
                 <Link
                   href={`/admin/fleet/${car.id}/edit`}
                   className="p-1.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-lg shadow-sm hover:text-black hover:bg-white transition-colors"
@@ -119,7 +151,7 @@ export default function FleetManagement() {
 
             {/* Details */}
             <div className="p-5 flex-1 flex flex-col justify-between">
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start">
                 <div className="pr-4">
                   <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">{car.title}</h3>
                   <p className="text-sm text-gray-500 mt-1">{car.capacity} Seats • {car.transmission ?? "Auto"}</p>

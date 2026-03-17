@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
-  const vehicles = await prisma.vehicle.findMany({ orderBy: { createdAt: 'asc' } });
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const all = searchParams.get('all') === '1'; // admin uses ?all=1 to see paused
+  const vehicles = await prisma.vehicle.findMany({
+    where: all ? undefined : { paused: false },
+    orderBy: { createdAt: 'asc' },
+  });
   return NextResponse.json(vehicles);
 }
 

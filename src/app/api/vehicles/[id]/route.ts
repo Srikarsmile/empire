@@ -30,6 +30,7 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(body.rating !== undefined && { rating: Number(body.rating) }),
         ...(body.minNights !== undefined && { minNights: Number(body.minNights) }),
         ...(body.bookedRanges !== undefined && { bookedRanges: body.bookedRanges }),
+        ...(body.paused !== undefined && { paused: Boolean(body.paused) }),
       },
     });
     return NextResponse.json(vehicle);
