@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #FFFBF5;
-  --surface: #FFFBF5;
-  --surface-soft: #FEF6EE;
+  --bg: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-soft: #F5F5F5;
   --surface-dark: #1C2B3A;
   --ink-900: #1C2B3A;
   --ink-700: #4A5568;

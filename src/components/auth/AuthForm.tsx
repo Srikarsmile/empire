@@ -11,16 +11,28 @@ export default function AuthForm({ onPhoneSubmit }: AuthFormProps) {
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone) return;
 
     setIsLoading(true);
-    // Simulate API call for sending SMS OTP
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    setError(null);
+
+    const res = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    });
+
     setIsLoading(false);
-    
-    // Pass execution up to show OTP screen
+
+    if (!res.ok) {
+      setError('Phone number not recognized. Please try again.');
+      return;
+    }
+
     onPhoneSubmit(phone);
   };
 
@@ -58,6 +70,10 @@ export default function AuthForm({ onPhoneSubmit }: AuthFormProps) {
             />
           </div>
         </div>
+
+        {error && (
+          <p className="text-sm text-red-600 text-center -mt-1">{error}</p>
+        )}
 
         <button
           type="submit"

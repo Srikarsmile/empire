@@ -11,7 +11,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: 'cover',
-  themeColor: '#FFFBF5',
+  themeColor: '#FFFFFF',
 };
 
 export const metadata: Metadata = {
@@ -66,7 +66,7 @@ export default function RootLayout({
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
       </head>
-      <body className="bg-[#FFFBF5] text-[#1C2B3A] antialiased">
+      <body className="bg-white text-[#1C2B3A] antialiased" suppressHydrationWarning>
         <a href="#app-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:text-black focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:font-bold focus:text-sm">
           Skip to main content
         </a>

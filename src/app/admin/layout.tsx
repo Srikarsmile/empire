@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Car, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { Car, LayoutDashboard, Settings, LogOut, Activity } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function AdminLayout({
@@ -18,6 +18,7 @@ export default function AdminLayout({
     { name: "Overview", href: "/admin", icon: LayoutDashboard },
     { name: "Fleet Management", href: "/admin/fleet", icon: Car },
     { name: "Settings", href: "/admin/settings", icon: Settings },
+    { name: "Status", href: "/admin/status", icon: Activity },
   ];
 
   return (

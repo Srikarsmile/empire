@@ -3,8 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import AvailabilityCalendar from '@/components/AvailabilityCalendar';
 import type { DateRange } from '@/data/vehicleMeta';
 
@@ -111,7 +110,6 @@ function findFirstAvailableWindow(bookedRanges: DateRange[], minNights: number) 
 export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [reservationSuccess, setReservationSuccess] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -189,29 +187,30 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/reservations', {
+      const response = await fetch('/api/checkout/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           vehicleId,
-          vehicleTitle: vehicle.title,
-          vehicleImage: vehicle.images[0],
-          price: vehicle.price,
           checkIn,
           checkOut,
           nights,
-          total,
         }),
       });
 
-      if (response.ok) setReservationSuccess(true);
+      if (response.ok) {
+        const { url } = (await response.json()) as { url: string };
+        window.location.href = url;
+      } else {
+        alert('Could not start checkout. Please retry.');
+        setIsSubmitting(false);
+      }
     } catch {
       alert('Rental request failed. Please retry.');
-    } finally {
       setIsSubmitting(false);
     }
-  }, [checkIn, checkOut, dateError, formData, isFormValid, nights, vehicle, vehicleId, total]);
+  }, [checkIn, checkOut, dateError, formData, isFormValid, nights, vehicle, vehicleId]);
 
   if (!vehicle) {
     return (
@@ -338,7 +337,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                   onClick={confirmReservation}
                   disabled={isSubmitting || reservationBlocked}
                 >
-                  {isSubmitting ? 'Processing...' : 'Confirm rental'}
+                  {isSubmitting ? 'Redirecting...' : 'Continue to payment'}
                 </button>
                 <p className="muted-label">You will only be charged after your rental is confirmed.</p>
               </div>
@@ -347,31 +346,6 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
         </div>
       </div>
 
-      <AnimatePresence>
-        {reservationSuccess ? (
-          <motion.div
-            className="success-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="success-card"
-              initial={{ opacity: 0, y: 24, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <CheckCircle2 className="w-10 h-10 mx-auto" />
-              <h2>Rental confirmed</h2>
-              <p>Your vehicle is locked in. Manage it anytime from reservations.</p>
-              <Link href="/reservations" className="btn-primary">
-                Go to reservations
-              </Link>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
     </>
   );
 }

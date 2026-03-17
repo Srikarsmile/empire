@@ -14,6 +14,7 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Timer for resend button
@@ -54,7 +55,7 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
 
     // If all filled, trigger submit automatically
     if (newOtp.every((val) => val !== "") && index === 5) {
-      verifyOtp();
+      verifyOtp(newOtp);
     } else {
       focusNextInfo(index);
     }
@@ -101,18 +102,29 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
     setActiveIndex(nextIndex);
 
     if (pastedData.length === 6) {
-      verifyOtp();
+      verifyOtp(newOtp);
     }
   };
 
-  const verifyOtp = async () => {
+  const verifyOtp = async (otpValue?: string[]) => {
+    const code = (otpValue ?? otp).join('');
     setIsLoading(true);
-    // Simulate API Verification
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setError(null);
+
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, code }),
+    });
+
     setIsLoading(false);
+
+    if (!res.ok) {
+      setError('Invalid or expired code. Please try again.');
+      return;
+    }
+
     setIsSuccess(true);
-    
-    // Success animation before closing
     setTimeout(() => {
       onSuccess();
     }, 1200);
@@ -181,6 +193,10 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
           />
         ))}
       </div>
+
+      {error && (
+        <p className="text-sm text-red-600 text-center -mt-2">{error}</p>
+      )}
 
       <button
         onClick={verifyManually}

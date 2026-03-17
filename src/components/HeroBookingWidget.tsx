@@ -6,6 +6,7 @@ import InteractiveHoverButton from "@/components/ui/interactive-hover-button";
 import { cn } from "@/lib/utils";
 
 export default function HeroBookingWidget() {
+  const [pickup, setPickup] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [useTwoColumns, setUseTwoColumns] = useState(false);
@@ -61,11 +62,19 @@ export default function HeroBookingWidget() {
         </label>
         <div className="relative">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[var(--accent)]" />
-          <input
-            type="text"
-            placeholder="POP Airport, Sosua Villa..."
-            className="w-full bg-[var(--surface-soft)] rounded-xl h-14 pl-10 pr-4 font-semibold text-[var(--ink-900)] placeholder:text-[var(--ink-500)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          />
+          <select
+            value={pickup}
+            onChange={(e) => setPickup(e.target.value)}
+            className="w-full bg-[var(--surface-soft)] rounded-xl h-14 pl-10 pr-4 font-semibold text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] appearance-none"
+          >
+            <option value="" disabled>Select a location</option>
+            <option value="PUJ">Punta Cana International Airport (PUJ)</option>
+            <option value="SDQ">Las Américas International Airport (SDQ)</option>
+            <option value="STI">Cibao International Airport (STI)</option>
+            <option value="POP">Gregorio Luperón International Airport (POP)</option>
+            <option value="LRM">La Romana (LRM)</option>
+            <option value="AZS">Samaná El Catey International Airport (AZS)</option>
+          </select>
         </div>
       </div>
 

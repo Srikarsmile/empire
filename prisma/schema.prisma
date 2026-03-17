@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Reservation {
+  id              String   @id @default(cuid())
+  status          String   @default("upcoming")
+  createdAt       DateTime @default(now())
+  stripeSessionId String?  @unique
+  vehicleId       String
+  vehicleTitle    String
+  vehicleImage    String
+  checkIn         String
+  checkOut        String
+  nights          Int
+  price           Int
+  subtotal        Int
+  taxes           Int
+  total           Int
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

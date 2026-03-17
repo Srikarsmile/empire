@@ -1,29 +1,15 @@
 import { NextResponse } from 'next/server';
-
-type ReservationRecord = {
-  id: string;
-  status: 'upcoming';
-  createdAt: string;
-  [key: string]: unknown;
-};
-
-const reservations: ReservationRecord[] = [];
+import { getAllReservations, addReservation } from '@/lib/reservationStore';
 
 export async function GET() {
+  const reservations = await getAllReservations();
   return NextResponse.json(reservations);
 }
 
 export async function POST(request: Request) {
   try {
     const data = (await request.json()) as Record<string, unknown>;
-    const newReservation: ReservationRecord = {
-      ...data,
-      id: `reservation-${Date.now()}`,
-      status: 'upcoming',
-      createdAt: new Date().toISOString(),
-    };
-
-    reservations.push(newReservation);
+    const newReservation = await addReservation(data as Parameters<typeof addReservation>[0]);
     return NextResponse.json(newReservation, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Invalid reservation data' }, { status: 400 });
