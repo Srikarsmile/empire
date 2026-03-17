@@ -7,9 +7,9 @@ export async function POST(request: Request) {
   const { email } = await request.json();
 
   const normalizedEmail = String(email).toLowerCase().trim();
-  const adminEmail = String(process.env.ADMIN_EMAIL ?? '').toLowerCase().trim();
+  const adminEmails = String(process.env.ADMIN_EMAIL ?? '').toLowerCase().split(',').map(e => e.trim());
 
-  if (!normalizedEmail || normalizedEmail !== adminEmail) {
+  if (!normalizedEmail || !adminEmails.includes(normalizedEmail)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 400 });
   }
 

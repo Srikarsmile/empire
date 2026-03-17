@@ -4,9 +4,9 @@ export async function POST(request: Request) {
   try {
     const { email } = (await request.json()) as { email: string };
     const normalizedEmail = String(email).toLowerCase().trim();
-    const adminEmail = String(process.env.ADMIN_EMAIL ?? '').toLowerCase().trim();
+    const adminEmails = String(process.env.ADMIN_EMAIL ?? '').toLowerCase().split(',').map(e => e.trim());
 
-    const isAdmin = adminEmail !== '' && normalizedEmail === adminEmail;
+    const isAdmin = adminEmails.length > 0 && adminEmails.includes(normalizedEmail);
 
     return NextResponse.json({ isAdmin });
   } catch {
