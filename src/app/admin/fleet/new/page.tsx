@@ -4,11 +4,13 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImageManager from "@/components/admin/ImageManager";
 
 export default function AddVehicle() {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     make: "",
@@ -39,7 +41,7 @@ export default function AddVehicle() {
         description: form.description,
         location: form.location,
         amenities: form.amenities.split(',').map((a) => a.trim()).filter(Boolean),
-        images: [],
+        images,
       }),
     });
 
@@ -65,7 +67,7 @@ export default function AddVehicle() {
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
+      <form onSubmit={handleSave} className="space-y-6">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -101,6 +103,11 @@ export default function AddVehicle() {
             <input name="amenities" type="text" placeholder="Airport pickup, Bluetooth audio, Unlimited mileage" value={form.amenities} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
             <p className="text-xs text-gray-400">Comma-separated list</p>
           </div>
+        </div>
+
+        {/* Images */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+          <ImageManager images={images} onChange={setImages} />
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

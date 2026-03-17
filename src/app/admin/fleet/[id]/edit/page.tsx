@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import ImageManager from "@/components/admin/ImageManager";
 
 interface VehicleRecord {
   id: string;
@@ -22,6 +23,7 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -44,6 +46,7 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
           location: v.location ?? "",
           amenities: (v.amenities ?? []).join(', '),
         });
+        setImages(v.images ?? []);
         setIsLoading(false);
       })
       .catch(() => {
@@ -71,6 +74,7 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
         description: form.description,
         location: form.location,
         amenities: form.amenities.split(',').map((a) => a.trim()).filter(Boolean),
+        images,
       }),
     });
 
@@ -104,7 +108,7 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
+      <form onSubmit={handleSave} className="space-y-6">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Title</label>
@@ -137,6 +141,11 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
             <input name="amenities" type="text" value={form.amenities} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
             <p className="text-xs text-gray-400">Comma-separated list</p>
           </div>
+        </div>
+
+        {/* Images */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+          <ImageManager images={images} onChange={setImages} />
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
