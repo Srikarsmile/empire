@@ -30,7 +30,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   await prisma.vehicle.update({
     where: { id },
     data: {
-      reviews: updatedReviews,
+      reviews: JSON.parse(JSON.stringify(updatedReviews)),
       reviewCount: updatedReviews.length,
       rating: Math.round(newRating * 10) / 10,
     },
