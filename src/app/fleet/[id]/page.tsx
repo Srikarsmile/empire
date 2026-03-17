@@ -16,7 +16,7 @@ function formatDate(value: string) {
 
 export default async function FleetDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const vehicle = getVehicleById(id);
+  const vehicle = await getVehicleById(id);
 
   if (!vehicle) {
     notFound();

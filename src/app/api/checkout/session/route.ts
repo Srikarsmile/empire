@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       phone: string;
     };
 
-    const vehicle = getVehicleById(body.vehicleId);
+    const vehicle = await getVehicleById(body.vehicleId);
     if (!vehicle) {
       return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
     }

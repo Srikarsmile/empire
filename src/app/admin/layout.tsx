@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Car, LayoutDashboard, Settings, LogOut, Activity } from "lucide-react";
+import { Car, LayoutDashboard, Settings, LogOut, Activity, CalendarDays } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function AdminLayout({
@@ -17,6 +17,7 @@ export default function AdminLayout({
   const navItems = [
     { name: "Overview", href: "/admin", icon: LayoutDashboard },
     { name: "Fleet Management", href: "/admin/fleet", icon: Car },
+    { name: "Reservations", href: "/admin/reservations", icon: CalendarDays },
     { name: "Settings", href: "/admin/settings", icon: Settings },
     { name: "Status", href: "/admin/status", icon: Activity },
   ];
@@ -34,7 +35,7 @@ export default function AdminLayout({
 
           <nav className="space-y-1">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
               const Icon = item.icon;
               return (
                 <Link
@@ -55,7 +56,7 @@ export default function AdminLayout({
         </div>
 
         <div className="p-6 border-t border-gray-100">
-          <button 
+          <button
             onClick={() => {
               logout();
               router.push("/");

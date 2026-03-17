@@ -6,8 +6,10 @@ import HeroCardStack from '@/components/HeroCardStack';
 import HeroBookingWidget from '@/components/HeroBookingWidget';
 import { Suspense } from 'react';
 
-export default function Home() {
-  const vehicles = getAllVehicles();
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const vehicles = await getAllVehicles();
 
   const cardStackItems: CardStackItem[] = vehicles.slice(0, 5).map(v => ({
     id: v.id,

@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
-  const { phone, code } = await request.json();
+  const { email, code } = await request.json();
 
-  const digits = String(phone).replace(/\D/g, '');
+  const normalizedEmail = String(email).toLowerCase().trim();
 
   const record = await prisma.otpCode.findFirst({
     where: {
-      phone: digits,
+      email: normalizedEmail,
       expiresAt: { gt: new Date() },
     },
   });
@@ -20,5 +20,12 @@ export async function POST(request: Request) {
   // One-time use — delete after successful verification
   await prisma.otpCode.delete({ where: { id: record.id } });
 
-  return NextResponse.json({ ok: true });
+  const response = NextResponse.json({ ok: true });
+  response.cookies.set('empire_auth', '1', {
+    httpOnly: true,
+    path: '/',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+  return response;
 }

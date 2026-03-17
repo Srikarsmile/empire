@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 type User = {
-  phone: string;
+  email: string;
   isAdmin: boolean;
 };
 
@@ -12,7 +12,7 @@ type AuthContextType = {
   user: User | null;
   openAuth: () => void;
   closeAuth: () => void;
-  login: (phone: string) => Promise<void>;
+  login: (email: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem(AUTH_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as User;
-        if (parsed.phone) return parsed;
+        if (parsed.email) return parsed;
       }
     } catch {
       // Ignore parse errors
@@ -38,15 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const openAuth = () => setIsOpen(true);
   const closeAuth = () => setIsOpen(false);
-  
-  const login = useCallback(async (phone: string) => {
+
+  const login = useCallback(async (email: string) => {
     let isAdmin = false;
 
     try {
       const res = await fetch("/api/auth/check-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ email }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If the check fails, default to non-admin
     }
 
-    const newUser: User = { phone, isAdmin };
+    const newUser: User = { email, isAdmin };
     setUser(newUser);
 
     try {
@@ -65,8 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ignore storage errors
     }
   }, []);
-  
+
   const logout = useCallback(() => {
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setUser(null);
     try {
       localStorage.removeItem(AUTH_STORAGE_KEY);

@@ -28,9 +28,26 @@ model Reservation {
   phone           String
 }
 
+model Vehicle {
+  id           String   @id @default(cuid())
+  title        String
+  price        Int
+  capacity     Int
+  description  String
+  amenities    String[]
+  images       String[]
+  location     String
+  rating       Float    @default(4.7)
+  reviewCount  Int      @default(0)
+  minNights    Int      @default(2)
+  bookedRanges Json     @default("[]")
+  reviews      Json     @default("[]")
+  createdAt    DateTime @default(now())
+}
+
 model OtpCode {
   id        String   @id @default(cuid())
-  phone     String
+  email     String
   code      String
   expiresAt DateTime
   createdAt DateTime @default(now())

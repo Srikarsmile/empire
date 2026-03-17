@@ -4,12 +4,12 @@ import { useState, useRef, useEffect, KeyboardEvent, ClipboardEvent } from "reac
 import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 
 interface OtpVerificationProps {
-  phone: string;
+  email: string;
   onBack: () => void;
   onSuccess: () => void;
 }
 
-export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerificationProps) {
+export default function OtpVerification({ email, onBack, onSuccess }: OtpVerificationProps) {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
 
   // Timer for resend button
   const [countdown, setCountdown] = useState(60);
-  
+
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
@@ -66,11 +66,9 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
       e.preventDefault();
       const newOtp = [...otp];
       if (otp[index]) {
-        // Current input has value, empty it
         newOtp[index] = "";
         setOtp(newOtp);
       } else {
-        // Current input is empty, go previous and empty it
         if (index > 0) {
           newOtp[index - 1] = "";
           setOtp(newOtp);
@@ -114,7 +112,7 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
     const res = await fetch('/api/auth/verify-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, code }),
+      body: JSON.stringify({ email, code }),
     });
 
     setIsLoading(false);
@@ -143,7 +141,7 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
           <CheckCircle2 className="w-12 h-12 text-green-500" />
         </div>
         <h3 className="text-xl font-bold tracking-tight text-gray-900">Verified Successfully</h3>
-        <p className="text-sm text-gray-500">Redirecting to checkout...</p>
+        <p className="text-sm text-gray-500">Redirecting...</p>
       </div>
     );
   }
@@ -160,10 +158,10 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
         </button>
         <div className="space-y-1">
           <h3 className="text-2xl font-semibold text-gray-900 tracking-tight">
-            Check your phone
+            Check your email
           </h3>
           <p className="text-sm text-gray-500 line-clamp-2 pr-4">
-            We sent a 6-digit code to <span className="font-semibold text-gray-900">{phone}</span>.
+            We sent a 6-digit code to <span className="font-semibold text-gray-900">{email}</span>.
           </p>
         </div>
       </div>
@@ -183,10 +181,10 @@ export default function OtpVerification({ phone, onBack, onSuccess }: OtpVerific
             onPaste={handlePaste}
             onFocus={() => setActiveIndex(index)}
             className={`w-11 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-semibold rounded-xl border transition-all duration-200 outline-none
-              ${activeIndex === index 
-                ? 'border-gray-900 bg-white ring-2 ring-gray-900 shadow-sm' 
-                : digit 
-                  ? 'border-gray-300 bg-white shadow-sm' 
+              ${activeIndex === index
+                ? 'border-gray-900 bg-white ring-2 ring-gray-900 shadow-sm'
+                : digit
+                  ? 'border-gray-300 bg-white shadow-sm'
                   : 'border-gray-200 bg-gray-50'
               }
             `}

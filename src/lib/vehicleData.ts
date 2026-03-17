@@ -1,5 +1,5 @@
-import baseVehicles from '@/data/vehicles.json';
-import vehicleMeta, { VehicleMeta } from '@/data/vehicleMeta';
+import { prisma } from '@/lib/prisma';
+import type { ReviewItem, DateRange } from '@/data/vehicleMeta';
 
 export interface VehicleBase {
   id: string;
@@ -12,23 +12,43 @@ export interface VehicleBase {
   location: string;
 }
 
-export interface EnrichedVehicle extends VehicleBase, VehicleMeta {}
-
-const defaultMeta: VehicleMeta = {
-  rating: 4.7,
-  reviewCount: 0,
-  minNights: 2,
-  bookedRanges: [],
-  reviews: [],
-};
-
-export function getAllVehicles(): EnrichedVehicle[] {
-  return (baseVehicles as VehicleBase[]).map((vehicle) => ({
-    ...vehicle,
-    ...(vehicleMeta[vehicle.id] ?? defaultMeta),
-  }));
+export interface EnrichedVehicle extends VehicleBase {
+  rating: number;
+  reviewCount: number;
+  minNights: number;
+  bookedRanges: DateRange[];
+  reviews: ReviewItem[];
 }
 
-export function getVehicleById(id: string): EnrichedVehicle | null {
-  return getAllVehicles().find((vehicle) => vehicle.id === id) ?? null;
+function toEnriched(v: {
+  id: string;
+  title: string;
+  price: number;
+  capacity: number;
+  description: string;
+  amenities: string[];
+  images: string[];
+  location: string;
+  rating: number;
+  reviewCount: number;
+  minNights: number;
+  bookedRanges: unknown;
+  reviews: unknown;
+}): EnrichedVehicle {
+  return {
+    ...v,
+    bookedRanges: v.bookedRanges as DateRange[],
+    reviews: v.reviews as ReviewItem[],
+  };
+}
+
+export async function getAllVehicles(): Promise<EnrichedVehicle[]> {
+  const vehicles = await prisma.vehicle.findMany({ orderBy: { createdAt: 'asc' } });
+  return vehicles.map(toEnriched);
+}
+
+export async function getVehicleById(id: string): Promise<EnrichedVehicle | null> {
+  const v = await prisma.vehicle.findUnique({ where: { id } });
+  if (!v) return null;
+  return toEnriched(v);
 }

@@ -11,17 +11,17 @@ import OtpVerification from "./OtpVerification";
 export default function LoginModal() {
   const { isOpen, closeAuth, login } = useAuth();
   const router = useRouter();
-  
+
   // flow states: 'auth' -> 'otp'
   const [view, setView] = useState<'auth' | 'otp'>('auth');
-  const [phoneToVerify, setPhoneToVerify] = useState("");
+  const [emailToVerify, setEmailToVerify] = useState("");
 
   // Reset modal state when it closes
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
         setView('auth');
-        setPhoneToVerify("");
+        setEmailToVerify("");
       }, 300); // Wait for exit animation
     }
   }, [isOpen]);
@@ -38,22 +38,20 @@ export default function LoginModal() {
     };
   }, [isOpen]);
 
-  const handlePhoneSubmit = (phone: string) => {
-    setPhoneToVerify(phone);
+  const handleEmailSubmit = (email: string) => {
+    setEmailToVerify(email);
     setView('otp');
   };
 
   const handleOtpSuccess = async () => {
-    await login(phoneToVerify);
+    await login(emailToVerify);
     closeAuth();
-    
-    // Re-check from context after login completes
-    // The login function now calls the server to check admin status
+
     try {
       const res = await fetch("/api/auth/check-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneToVerify }),
+        body: JSON.stringify({ email: emailToVerify }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -92,7 +90,7 @@ export default function LoginModal() {
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
                 <h2 className="text-lg font-semibold tracking-tight text-gray-900">
-                  {view === 'auth' ? 'Log in or sign up' : 'Check your phone'}
+                  {view === 'auth' ? 'Log in or sign up' : 'Check your email'}
                 </h2>
                 <button
                   onClick={closeAuth}
@@ -115,7 +113,7 @@ export default function LoginModal() {
                       transition={{ duration: 0.2 }}
                       className="p-6"
                     >
-                      <AuthForm onPhoneSubmit={handlePhoneSubmit} />
+                      <AuthForm onEmailSubmit={handleEmailSubmit} />
                     </motion.div>
                   ) : (
                     <motion.div
@@ -126,8 +124,8 @@ export default function LoginModal() {
                       transition={{ duration: 0.2 }}
                       className="p-6"
                     >
-                      <OtpVerification 
-                        phone={phoneToVerify} 
+                      <OtpVerification
+                        email={emailToVerify}
                         onBack={() => setView('auth')}
                         onSuccess={handleOtpSuccess}
                       />
