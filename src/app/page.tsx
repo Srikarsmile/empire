@@ -16,7 +16,7 @@ export default async function Home() {
     title: v.title,
     description: v.description,
     imageSrc: v.images[0],
-    href: "#fleet",
+    href: `/reserve/${v.id}`,
     ctaLabel: `$${v.price}/day`
   }));
 

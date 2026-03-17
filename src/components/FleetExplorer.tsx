@@ -97,7 +97,7 @@ function FleetCard({
       className="group relative flex flex-col bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:border-[var(--accent)] transition-colors duration-200 overflow-hidden"
       index={index}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)]">
+      <Link href={`/reserve/${vehicle.id}`} className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)] block">
         <span
           className={`skeleton absolute inset-0 z-10 transition-opacity duration-500 ${imgLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         />
@@ -111,9 +111,10 @@ function FleetCard({
           onLoad={() => setImgLoaded(true)}
         />
         <button
-          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] transition cursor-pointer hover:bg-[var(--surface-soft)]"
+          className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] transition cursor-pointer hover:bg-[var(--surface-soft)]"
           onClick={(event) => {
             event.preventDefault();
+            event.stopPropagation();
             onToggleFavorite(vehicle.id);
           }}
           aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
@@ -129,7 +130,7 @@ function FleetCard({
             />
           </svg>
         </button>
-      </div>
+      </Link>
 
       <div className="flex flex-col flex-grow p-5">
         <div className="flex justify-between items-start gap-4 mb-1">
@@ -149,7 +150,7 @@ function FleetCard({
             <span className="text-[var(--ink-500)] font-medium text-sm ml-1">/ day</span>
           </div>
           <Link
-            href={`/fleet/${vehicle.id}`}
+            href={`/reserve/${vehicle.id}`}
             className="inline-flex items-center justify-center h-10 px-6 text-sm font-bold text-white transition bg-[var(--accent)] rounded-xl hover:bg-[var(--accent-light)] active:bg-[var(--accent-strong)]"
           >
             Book
