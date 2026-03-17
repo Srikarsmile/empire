@@ -5,11 +5,12 @@ import { CardStackItem } from '@/components/ui/card-stack';
 import HeroCardStack from '@/components/HeroCardStack';
 import HeroBookingWidget from '@/components/HeroBookingWidget';
 import { Suspense } from 'react';
+import { getSiteContent } from '@/lib/siteContent';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const vehicles = await getAllVehicles();
+  const [vehicles, siteContent] = await Promise.all([getAllVehicles(), getSiteContent()]);
 
   const cardStackItems: CardStackItem[] = vehicles.slice(0, 5).map(v => ({
     id: v.id,
@@ -30,11 +31,10 @@ export default async function Home() {
           <div className="flex flex-col gap-8 w-full xl:w-1/2 max-w-xl shrink-0 z-10 relative">
             <div className="space-y-4">
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-[var(--ink-900)]">
-                Get there <br />
-                faster.
+                {siteContent.hero.headline}
               </h1>
               <p className="text-xl text-[var(--ink-700)] font-medium">
-                Reserve your vehicle for Sosua, Cabarete, and Puerto Plata. Transparent pricing, no hassle.
+                {siteContent.hero.subheading}
               </p>
             </div>
 
@@ -53,49 +53,28 @@ export default async function Home() {
         <div className="px-4 sm:px-6 mx-auto max-w-7xl">
         <div className="mb-12 max-w-2xl">
           <h2 className="text-3xl sm:text-4xl font-bold text-[var(--ink-900)] mb-4">
-             Why choose Empire?
+            {siteContent.features.title}
           </h2>
           <p className="text-lg text-[var(--ink-700)] font-medium">
-            Straightforward process. No surprises.
+            {siteContent.features.subtitle}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex flex-col items-start gap-5 p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:shadow-[0_8px_24px_rgba(232,96,60,0.08)] transition-all duration-300">
-             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent)]">
-                 <Plane size={24} />
-             </div>
-             <div>
-               <h3 className="feature-heading mb-2 text-xl font-semibold text-[var(--ink-900)]">Airport Delivery</h3>
-               <p className="text-[var(--ink-700)] font-medium text-base">
-                 We deliver directly to POP airport, Sosua hotels, or your villa so you avoid taxi coordination on arrival.
-               </p>
-             </div>
-          </div>
-
-          <div className="flex flex-col items-start gap-5 p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:shadow-[0_8px_24px_rgba(232,96,60,0.08)] transition-all duration-300">
-             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent)]">
-                 <BadgeDollarSign size={24} />
-             </div>
-             <div>
-               <h3 className="feature-heading mb-2 text-xl font-semibold text-[var(--ink-900)]">Clear Pricing</h3>
-               <p className="text-[var(--ink-700)] font-medium text-base">
-                 Vehicle rate, taxes, and rental window confirmed before checkout. Absolute transparency.
-               </p>
-             </div>
-          </div>
-
-          <div className="flex flex-col items-start gap-5 p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:shadow-[0_8px_24px_rgba(232,96,60,0.08)] transition-all duration-300">
-             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent)]">
-                 <CarFront size={24} />
-             </div>
-             <div>
-               <h3 className="feature-heading mb-2 text-xl font-semibold text-[var(--ink-900)]">Built for the Coast</h3>
-               <p className="text-[var(--ink-700)] font-medium text-base">
-                 SUVs for beach days, fuel savers for city errands, and vans for groups. Maintained flawlessly.
-               </p>
-             </div>
-          </div>
+          {siteContent.features.cards.map((card, i) => {
+            const icons = [<Plane key="plane" size={24} />, <BadgeDollarSign key="dollar" size={24} />, <CarFront key="car" size={24} />];
+            return (
+              <div key={i} className="flex flex-col items-start gap-5 p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:shadow-[0_8px_24px_rgba(232,96,60,0.08)] transition-all duration-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-surface)] text-[var(--accent)]">
+                  {icons[i]}
+                </div>
+                <div>
+                  <h3 className="feature-heading mb-2 text-xl font-semibold text-[var(--ink-900)]">{card.title}</h3>
+                  <p className="text-[var(--ink-700)] font-medium text-base">{card.description}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
         </div>
       </section>
@@ -104,13 +83,13 @@ export default async function Home() {
       <div id="fleet" className="pt-28 pb-24 mt-4 relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 mb-16 text-center max-w-3xl flex flex-col items-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--accent-surface)]/60 backdrop-blur-sm px-4 py-1.5 text-sm font-semibold text-[var(--accent-strong)] mb-6 shadow-sm">
-             Explore our collection
+            {siteContent.fleet.badge}
           </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[var(--ink-900)] mb-6">
-             The Empire Fleet
+            {siteContent.fleet.title}
           </h2>
           <p className="text-xl text-[var(--ink-700)] font-medium leading-relaxed">
-             Hand-picked vehicles perfect for Dominican Republic roads. Maintained to the highest standards for your peace of mind.
+            {siteContent.fleet.description}
           </p>
         </div>
         <Suspense>

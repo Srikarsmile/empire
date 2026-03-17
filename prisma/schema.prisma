@@ -45,6 +45,12 @@ model Vehicle {
   createdAt    DateTime @default(now())
 }
 
+model SiteContent {
+  id        String   @id @default("main")
+  data      Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}
+
 model OtpCode {
   id        String   @id @default(cuid())
   email     String
