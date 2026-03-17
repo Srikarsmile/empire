@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     // Block dates on the vehicle
     const vehicle = await prisma.vehicle.findUnique({ where: { id: meta.vehicleId } });
     if (vehicle) {
-      const existing = (vehicle.bookedRanges as DateRange[]) ?? [];
+      const existing = (vehicle.bookedRanges as unknown as DateRange[]) ?? [];
       const updated: DateRange[] = [...existing, { start: meta.checkIn, end: meta.checkOut }];
       await prisma.vehicle.update({
         where: { id: meta.vehicleId },
