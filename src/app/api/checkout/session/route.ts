@@ -2,9 +2,8 @@ import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { getVehicleById } from '@/lib/vehicleData';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
 export async function POST(request: Request) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   try {
     const body = (await request.json()) as {
       vehicleId: string;
