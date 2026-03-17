@@ -6,6 +6,7 @@ import { SquareArrowOutUpRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { clsx } from "clsx";
+import { useRouter } from "next/navigation";
 import { twMerge } from "tailwind-merge";
 
 function cn(...classes: Array<string | undefined | null | false>) {
@@ -119,6 +120,7 @@ export function CardStack<T extends CardStackItem>({
   renderCard,
 }: CardStackProps<T>) {
   const reduceMotion = useReducedMotion();
+  const router = useRouter();
   const len = items.length;
 
   const [active, setActive] = React.useState(() =>
@@ -304,7 +306,13 @@ export function CardStack<T extends CardStackItem>({
                     damping: springDamping,
                     mass: 0.85,
                   }}
-                  onClick={() => setActive(i)}
+                  onClick={() => {
+                    if (isActive && item.href) {
+                      router.push(item.href);
+                    } else {
+                      setActive(i);
+                    }
+                  }}
                   {...dragProps}
                 >
                   <div
