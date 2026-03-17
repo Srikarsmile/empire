@@ -2138,8 +2138,7 @@ p {
     grid-template-columns: 1fr;
   }
 
-  .property-layout .booking-side,
-  .booking-layout .booking-side {
+  .property-layout .booking-side {
     order: -1;
   }
 
