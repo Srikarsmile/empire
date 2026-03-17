@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import { AuthProvider } from '@/lib/AuthContext';
 import LoginModal from '@/components/auth/LoginModal';
 import PageTransition from '@/components/PageTransition';
+import { getSiteContent } from '@/lib/siteContent';
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -49,12 +50,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const currentYear = new Date().getFullYear();
+  const siteContent = await getSiteContent();
 
   return (
     <html lang="en">
@@ -77,7 +79,7 @@ export default function RootLayout({
               {children}
             </PageTransition>
           </main>
-          <Footer currentYear={currentYear} />
+          <Footer currentYear={currentYear} footerData={siteContent.footer} />
           <LoginModal />
         </AuthProvider>
       </body>

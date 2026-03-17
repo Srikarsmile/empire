@@ -4,21 +4,46 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
-  const [totalReservations, upcomingCount, revenueAgg, recent] = await Promise.all([
+  const [totalReservations, upcomingCount, revenueAgg, recent, allReservations] = await Promise.all([
     prisma.reservation.count(),
     prisma.reservation.count({ where: { status: 'upcoming' } }),
-    prisma.reservation.aggregate({ _sum: { total: true } }),
-    prisma.reservation.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    }),
+    prisma.reservation.aggregate({ _sum: { total: true }, where: { status: { not: 'cancelled' } } }),
+    prisma.reservation.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }),
+    prisma.reservation.findMany({ select: { total: true, createdAt: true, vehicleTitle: true, status: true } }),
   ]);
 
   const totalRevenue = revenueAgg._sum.total ?? 0;
 
+  // Monthly revenue — last 6 months
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+    const label = d.toLocaleString('en-US', { month: 'short', year: '2-digit' });
+    const monthRes = allReservations.filter((r) => {
+      const t = new Date(r.createdAt);
+      return t >= monthStart && t <= monthEnd && r.status !== 'cancelled';
+    });
+    return { label, revenue: monthRes.reduce((s, r) => s + r.total, 0), count: monthRes.length };
+  });
+
+  // Top vehicles by revenue
+  const vehicleMap: Record<string, { revenue: number; count: number }> = {};
+  for (const r of allReservations) {
+    if (r.status === 'cancelled') continue;
+    if (!vehicleMap[r.vehicleTitle]) vehicleMap[r.vehicleTitle] = { revenue: 0, count: 0 };
+    vehicleMap[r.vehicleTitle].revenue += r.total;
+    vehicleMap[r.vehicleTitle].count += 1;
+  }
+  const topVehicles = Object.entries(vehicleMap)
+    .sort(([, a], [, b]) => b.revenue - a.revenue)
+    .slice(0, 5)
+    .map(([title, data]) => ({ title, ...data }));
+
   const stats = [
     { label: 'Total Reservations', value: totalReservations.toString() },
-    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString()}` },
+    { label: 'Revenue (excl. cancelled)', value: `$${totalRevenue.toLocaleString()}` },
     { label: 'Upcoming', value: upcomingCount.toString() },
   ];
 
@@ -40,6 +65,57 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
+      {/* Monthly Revenue */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-900">Monthly Revenue</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Last 6 months, excluding cancelled</p>
+          </div>
+          <div className="p-6 space-y-3">
+            {months.map((m) => {
+              const maxRevenue = Math.max(...months.map((x) => x.revenue), 1);
+              const pct = (m.revenue / maxRevenue) * 100;
+              return (
+                <div key={m.label} className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-gray-500 w-12 shrink-0">{m.label}</span>
+                  <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div className="h-2 bg-black rounded-full transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 w-20 text-right shrink-0">
+                    ${m.revenue.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-gray-400 w-12 text-right shrink-0">{m.count} bk</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Top Vehicles */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-900">Top Vehicles</h2>
+            <p className="text-xs text-gray-400 mt-0.5">By total revenue generated</p>
+          </div>
+          {topVehicles.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 text-sm">No data yet.</div>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {topVehicles.map((v, i) => (
+                <div key={v.title} className="px-6 py-3 flex items-center gap-4">
+                  <span className="text-xs font-bold text-gray-400 w-4">{i + 1}</span>
+                  <span className="flex-1 text-sm font-medium text-gray-800 truncate">{v.title}</span>
+                  <span className="text-xs text-gray-400">{v.count} bookings</span>
+                  <span className="text-sm font-bold text-gray-900">${v.revenue.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Recent Reservations */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">Recent Reservations</h2>
@@ -49,9 +125,7 @@ export default async function AdminDashboard() {
         </div>
 
         {recent.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 text-sm">
-            No reservations yet.
-          </div>
+          <div className="p-8 text-center text-gray-500 text-sm">No reservations yet.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Car, LayoutDashboard, Settings, LogOut, Activity, CalendarDays, PencilLine } from "lucide-react";
+import { Car, LayoutDashboard, Settings, LogOut, Activity, CalendarDays, PencilLine, Star, CalendarRange } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function AdminLayout({
@@ -18,6 +18,8 @@ export default function AdminLayout({
     { name: "Overview", href: "/admin", icon: LayoutDashboard },
     { name: "Fleet Management", href: "/admin/fleet", icon: Car },
     { name: "Reservations", href: "/admin/reservations", icon: CalendarDays },
+    { name: "Calendar", href: "/admin/calendar", icon: CalendarRange },
+    { name: "Reviews", href: "/admin/reviews", icon: Star },
     { name: "Site Content", href: "/admin/content", icon: PencilLine },
     { name: "Settings", href: "/admin/settings", icon: Settings },
     { name: "Status", href: "/admin/status", icon: Activity },

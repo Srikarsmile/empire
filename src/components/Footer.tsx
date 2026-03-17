@@ -3,16 +3,25 @@
 import { usePathname } from 'next/navigation';
 import { FlickeringFooter } from '@/components/ui/flickering-footer';
 
-interface FooterProps {
-  currentYear: number;
+interface FooterData {
+  description: string;
+  instagram: string;
+  twitter: string;
+  facebook: string;
+  columns: Array<{ title: string; links: Array<{ title: string; url: string }> }>;
 }
 
-export default function Footer({ currentYear }: FooterProps) {
+interface FooterProps {
+  currentYear: number;
+  footerData?: FooterData;
+}
+
+export default function Footer({ currentYear, footerData }: FooterProps) {
   const pathname = usePathname();
 
   if (pathname?.startsWith('/admin')) {
     return null;
   }
 
-  return <FlickeringFooter currentYear={currentYear} />;
+  return <FlickeringFooter currentYear={currentYear} data={footerData} />;
 }

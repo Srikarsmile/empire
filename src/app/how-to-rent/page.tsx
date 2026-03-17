@@ -1,44 +1,33 @@
 import Link from 'next/link';
 import { Car, CalendarCheck, CheckCircle2 } from 'lucide-react';
 import { ReactNode } from 'react';
+import { getSiteContent } from '@/lib/siteContent';
 
-const STEPS: { icon: ReactNode; title: string; body: string }[] = [
-  {
-    icon: <Car className="w-5 h-5" />,
-    title: '1. Choose the right vehicle',
-    body: 'Browse compact cars, SUVs, convertibles, and group vans based on seats, daily price, and airport pickup options.',
-  },
-  {
-    icon: <CalendarCheck className="w-5 h-5" />,
-    title: '2. Lock in your dates',
-    body: 'Select pickup and return days, review availability, and confirm the rental window that fits your flight or villa check-in.',
-  },
-  {
-    icon: <CheckCircle2 className="w-5 h-5" />,
-    title: '3. Arrive and drive',
-    body: 'Review clear totals, submit your driver details, and meet the Empire team at the airport, hotel, villa, or agreed pickup point for handoff.',
-  },
+const STEP_ICONS: ReactNode[] = [
+  <Car key="car" className="w-5 h-5" />,
+  <CalendarCheck key="cal" className="w-5 h-5" />,
+  <CheckCircle2 key="check" className="w-5 h-5" />,
 ];
 
-export default function HowItWorksPage() {
+export default async function HowItWorksPage() {
+  const content = await getSiteContent();
+  const { headline, description, steps } = content.howToRent;
+
   return (
     <div className="page-shell how-page">
       <section className="how-section">
         <div className="shell">
           <div className="how-head">
             <span className="hero-kicker">How it works</span>
-            <h1>From landing to driving in 3 simple steps</h1>
-            <p>
-              Empire Car Rental keeps the Sosua rental process direct. Choose the right car, confirm dates, and get a clean
-              handoff without the usual airport scramble.
-            </p>
+            <h1>{headline}</h1>
+            <p>{description}</p>
           </div>
 
           <div className="how-grid">
-            {STEPS.map((step) => (
-              <article key={step.title} className="how-card">
+            {steps.map((step, i) => (
+              <article key={i} className="how-card">
                 <div className="flex h-[2.1rem] w-[2.1rem] items-center justify-center rounded-[0.72rem] bg-[var(--accent-surface)] text-[var(--accent)]">
-                  {step.icon}
+                  {STEP_ICONS[i] ?? STEP_ICONS[0]}
                 </div>
                 <h3>{step.title}</h3>
                 <p>{step.body}</p>

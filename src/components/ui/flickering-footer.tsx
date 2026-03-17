@@ -311,10 +311,27 @@ export const siteConfig = {
   ],
 };
 
-export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
+interface FooterData {
+  description?: string;
+  instagram?: string;
+  twitter?: string;
+  facebook?: string;
+  columns?: Array<{ title: string; links: Array<{ title: string; url: string }> }>;
+}
+
+export const FlickeringFooter = ({ currentYear, data }: { currentYear?: number; data?: FooterData }) => {
   const tablet = useMediaQuery("(max-width: 1024px)");
   const mobile = useMediaQuery("(max-width: 640px)");
   const year = currentYear ?? new Date().getFullYear();
+
+  const description = data?.description ?? siteConfig.hero.description;
+  const instagram = data?.instagram ?? '#';
+  const twitter = data?.twitter ?? '#';
+  const facebook = data?.facebook ?? '#';
+  const columns = data?.columns ?? siteConfig.footerLinks.map((col) => ({
+    title: col.title,
+    links: col.links.map((l) => ({ title: l.title, url: l.url })),
+  }));
 
   return (
     <footer id="footer" className="w-full relative bg-[var(--surface-soft)] pb-0 overflow-hidden pt-8 border-t border-[var(--border)]">
@@ -327,30 +344,30 @@ export const FlickeringFooter = ({ currentYear }: { currentYear?: number }) => {
              </div>
           </Link>
           <p className="text-[var(--ink-500)] font-medium leading-relaxed">
-            {siteConfig.hero.description}
+            {description}
           </p>
           <div className="flex gap-4 mt-2">
-             <a href="#" className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
+             <a href={instagram} className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
                <Instagram className="w-5 h-5" />
              </a>
-             <a href="#" className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
+             <a href={twitter} className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
                <Twitter className="w-5 h-5" />
              </a>
-             <a href="#" className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
+             <a href={facebook} className="h-10 w-10 bg-[var(--accent-surface)] text-[var(--accent)] flex items-center justify-center rounded-full hover:bg-[var(--accent)] hover:text-white transition-colors">
                <Facebook className="w-5 h-5" />
              </a>
           </div>
         </div>
         <div className="pt-12 md:pt-4 md:w-1/2 lg:w-7/12">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 gap-y-12">
-            {siteConfig.footerLinks.map((column, columnIndex) => (
+            {columns.map((column, columnIndex) => (
               <ul key={columnIndex} className="flex flex-col gap-y-4">
                 <li className="mb-1 text-sm font-bold tracking-widest uppercase text-[var(--ink-900)]">
                   {column.title}
                 </li>
-                {column.links.map((link) => (
+                {column.links.map((link, linkIndex) => (
                   <li
-                    key={link.id}
+                    key={linkIndex}
                     className="group inline-flex cursor-pointer items-center justify-start gap-1 text-[15px]/snug text-[var(--ink-500)] font-medium hover:text-[var(--accent)] transition-colors"
                   >
                     <Link href={link.url}>{link.title}</Link>
