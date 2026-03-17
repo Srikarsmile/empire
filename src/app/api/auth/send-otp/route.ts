@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   // Send email via Resend
   await resend.emails.send({
-    from: 'Empire Cars <onboarding@resend.dev>',
+    from: 'Empire Cars <noreply@empirerentcar.com>',
     to: normalizedEmail,
     subject: 'Your Empire Cars login code',
     text: `Your login code is: ${code}\n\nThis code expires in 5 minutes.`,
