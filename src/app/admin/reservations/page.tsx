@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Download } from "lucide-react";
 import Link from "next/link";
 
 interface Reservation {
@@ -73,6 +73,13 @@ export default function ReservationsPage() {
               className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-sm ml-2 placeholder:text-gray-400"
             />
           </div>
+          <a
+            href="/api/admin/reservations/export"
+            download
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition whitespace-nowrap"
+          >
+            <Download className="w-4 h-4" /> Export CSV
+          </a>
           <Link
             href="/admin/reservations/new"
             className="flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition whitespace-nowrap"

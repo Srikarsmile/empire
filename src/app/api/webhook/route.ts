@@ -82,15 +82,20 @@ export async function POST(request: Request) {
       });
     }
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://empirerentcar.com';
+    const phone = process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null;
+    const bookingRef = reservation.id.slice(-8).toUpperCase();
+
     // Send confirmation email to customer
     await resend.emails.send({
       from: 'Empire Cars <noreply@empirerentcar.com>',
       to: meta.email,
       subject: `Booking confirmed — ${meta.vehicleTitle}`,
       html: `
-        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#111">
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#111;padding:24px">
           <h2 style="margin-bottom:4px">Your rental is confirmed ✓</h2>
           <p style="color:#555;margin-top:0">Hi ${meta.firstName}, here are your booking details.</p>
+          <p style="font-size:0.85em;color:#888;margin-top:-8px">Booking reference: <strong style="color:#111">#${bookingRef}</strong></p>
 
           <table style="width:100%;border-collapse:collapse;margin:24px 0">
             <tr>
@@ -123,8 +128,22 @@ export async function POST(request: Request) {
             </tr>
           </table>
 
-          <p style="color:#555">We'll be in touch to arrange pickup. Questions? Reply to this email or contact us at <a href="https://empirerentcar.com">empirerentcar.com</a>.</p>
-          <p style="color:#555">— The Empire Cars Team</p>
+          <div style="background:#f9f9f9;border-radius:10px;padding:16px;margin-bottom:24px">
+            <p style="font-weight:600;margin:0 0 10px">What to bring at pickup</p>
+            <p style="margin:4px 0;color:#555;font-size:0.9em">🪪 &nbsp;Valid driving licence</p>
+            <p style="margin:4px 0;color:#555;font-size:0.9em">📘 &nbsp;Passport or national ID</p>
+            <p style="margin:4px 0;color:#555;font-size:0.9em">💳 &nbsp;Payment card used for booking</p>
+          </div>
+
+          <a href="${appUrl}/reservations" style="display:block;background:#111;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:600;margin-bottom:20px">
+            View my booking
+          </a>
+
+          <p style="color:#888;font-size:0.85em">
+            Our team will contact you 24 hours before pickup to confirm the exact location and time.
+            ${phone ? `Questions? Call or WhatsApp us at <a href="tel:${phone}" style="color:#111">${phone}</a>.` : 'Questions? Reply to this email.'}
+          </p>
+          <p style="color:#aaa;font-size:0.8em">— Empire Cars Sosua &nbsp;·&nbsp; <a href="${appUrl}" style="color:#aaa">${appUrl}</a></p>
         </div>
       `,
     });

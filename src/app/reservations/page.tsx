@@ -157,6 +157,11 @@ export default function ReservationsPage() {
                       <Link href={`/fleet/${reservation.vehicleId}`} className="btn-outline">
                         View vehicle
                       </Link>
+                      {reservation.status === 'completed' && (
+                        <Link href={`/fleet/${reservation.vehicleId}#reviews`} className="btn-primary" style={{ fontSize: '0.8rem', textAlign: 'center' }}>
+                          Leave a review
+                        </Link>
+                      )}
                     </div>
                   </motion.article>
                 ))

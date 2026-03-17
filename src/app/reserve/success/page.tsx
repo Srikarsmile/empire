@@ -125,6 +125,21 @@ function SuccessContent() {
               Confirmation sent to {reservation.email} for {reservation.firstName} {reservation.lastName}
             </p>
 
+            {/* What happens next */}
+            <div style={{ background: 'var(--surface-soft)', borderRadius: '0.875rem', padding: '1.25rem', marginBottom: '1.5rem' }}>
+              <p style={{ fontWeight: 600, marginBottom: '0.75rem', fontSize: '0.9rem' }}>What happens next</p>
+              {[
+                ['✉', 'Confirmation email sent to your inbox'],
+                ['📞', 'Empire team will contact you 24 hours before pickup to confirm the exact location and time'],
+                ['🚗', 'Meet the team at your agreed pickup point with your driving licence and passport'],
+              ].map(([icon, text], i) => (
+                <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', fontSize: '0.85rem', color: 'var(--ink-500)', marginBottom: i < 2 ? '0.6rem' : 0 }}>
+                  <span>{icon}</span>
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <Link href="/reservations" className="btn-primary" style={{ textAlign: 'center' }}>
                 View my reservations
