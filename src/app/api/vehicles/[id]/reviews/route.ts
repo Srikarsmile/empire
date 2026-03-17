@@ -22,7 +22,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     photos: [],
   };
 
-  const currentReviews = (vehicle.reviews as ReviewItem[]) ?? [];
+  const currentReviews = (vehicle.reviews as unknown as ReviewItem[]) ?? [];
   const updatedReviews = [...currentReviews, newReview];
 
   const newRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length;
