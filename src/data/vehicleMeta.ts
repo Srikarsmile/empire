@@ -6,7 +6,7 @@ export interface DateRange {
 export interface ReviewItem {
   id: string;
   guestName: string;
-  reviewerEmail: string;
+  reviewerEmail?: string;
   rating: number;
   date: string;
   comment: string;
