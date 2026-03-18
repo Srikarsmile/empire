@@ -11,6 +11,13 @@ type FeesConfig = {
   insuranceFee: number;
 };
 
+type Airport = {
+  id: string;
+  name: string;
+  city: string;
+  fee: number;
+};
+
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -23,7 +30,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
   );
 }
 
-function FeesManager() {
+function PricingTab() {
   const [config, setConfig] = useState<FeesConfig>({
     taxRate: 14, taxEnabled: true, airportEnabled: true, insuranceEnabled: false, insuranceFee: 0,
   });
@@ -54,95 +61,80 @@ function FeesManager() {
 
   const inputCls = 'rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none w-28';
 
+  if (loading) {
+    return <div className="flex items-center gap-2 text-gray-400 text-sm py-8"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>;
+  }
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-1">Price Breakdown</h2>
-        <p className="text-sm text-gray-500 mb-5">Toggle each fee on/off and set its value. Changes apply to all new bookings.</p>
+    <form onSubmit={handleSave} className="space-y-2">
+      <p className="text-sm text-gray-500 mb-6">Toggle each fee and set its value. Changes apply to all new bookings.</p>
 
-        {loading ? (
-          <div className="flex items-center gap-2 text-gray-400 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>
-        ) : (
-          <form onSubmit={handleSave} className="space-y-4">
-            {/* Tax row */}
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <Toggle enabled={config.taxEnabled} onChange={(v) => setConfig((p) => ({ ...p, taxEnabled: v }))} />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Taxes &amp; Service Fee</p>
-                  <p className="text-xs text-gray-400">Percentage of rental subtotal</p>
-                </div>
-              </div>
-              <div className="relative">
-                <input
-                  type="number" min="0" max="100" step="0.1"
-                  value={config.taxRate}
-                  disabled={!config.taxEnabled}
-                  onChange={(e) => setConfig((p) => ({ ...p, taxRate: Number(e.target.value) }))}
-                  className={`${inputCls} pr-8 disabled:opacity-40`}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
-              </div>
-            </div>
-
-            {/* Airport row */}
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <Toggle enabled={config.airportEnabled} onChange={(v) => setConfig((p) => ({ ...p, airportEnabled: v }))} />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Airport Drop-off</p>
-                  <p className="text-xs text-gray-400">Show drop-off option during booking</p>
-                </div>
-              </div>
-              <span className="text-xs text-gray-400 italic">Fees set per airport in section below</span>
-            </div>
-
-            {/* Insurance row */}
-            <div className="flex items-center justify-between py-3">
-              <div className="flex items-center gap-3">
-                <Toggle enabled={config.insuranceEnabled} onChange={(v) => setConfig((p) => ({ ...p, insuranceEnabled: v }))} />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Insurance</p>
-                  <p className="text-xs text-gray-400">Fixed fee added to every booking</p>
-                </div>
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                <input
-                  type="number" min="0" step="1"
-                  value={config.insuranceFee}
-                  disabled={!config.insuranceEnabled}
-                  onChange={(e) => setConfig((p) => ({ ...p, insuranceFee: Number(e.target.value) }))}
-                  className={`${inputCls} pl-7 disabled:opacity-40`}
-                />
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex items-center gap-1.5 bg-black text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {saved ? 'Saved!' : 'Save changes'}
-              </button>
-            </div>
-          </form>
-        )}
+      <div className="flex items-center justify-between py-4 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <Toggle enabled={config.taxEnabled} onChange={(v) => setConfig((p) => ({ ...p, taxEnabled: v }))} />
+          <div>
+            <p className="text-sm font-medium text-gray-900">Taxes &amp; Service Fee</p>
+            <p className="text-xs text-gray-400">Percentage of rental subtotal</p>
+          </div>
+        </div>
+        <div className="relative">
+          <input
+            type="number" min="0" max="100" step="0.1"
+            value={config.taxRate}
+            disabled={!config.taxEnabled}
+            onChange={(e) => setConfig((p) => ({ ...p, taxRate: Number(e.target.value) }))}
+            className={`${inputCls} pr-8 disabled:opacity-40`}
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+        </div>
       </div>
-    </div>
+
+      <div className="flex items-center justify-between py-4 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <Toggle enabled={config.airportEnabled} onChange={(v) => setConfig((p) => ({ ...p, airportEnabled: v }))} />
+          <div>
+            <p className="text-sm font-medium text-gray-900">Airport Drop-off</p>
+            <p className="text-xs text-gray-400">Show drop-off option during booking</p>
+          </div>
+        </div>
+        <span className="text-xs text-gray-400 italic">Fees set per airport in Locations tab</span>
+      </div>
+
+      <div className="flex items-center justify-between py-4">
+        <div className="flex items-center gap-3">
+          <Toggle enabled={config.insuranceEnabled} onChange={(v) => setConfig((p) => ({ ...p, insuranceEnabled: v }))} />
+          <div>
+            <p className="text-sm font-medium text-gray-900">Insurance</p>
+            <p className="text-xs text-gray-400">Fixed fee added to every booking</p>
+          </div>
+        </div>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+          <input
+            type="number" min="0" step="1"
+            value={config.insuranceFee}
+            disabled={!config.insuranceEnabled}
+            onChange={(e) => setConfig((p) => ({ ...p, insuranceFee: Number(e.target.value) }))}
+            className={`${inputCls} pl-7 disabled:opacity-40`}
+          />
+        </div>
+      </div>
+
+      <div className="pt-4">
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex items-center gap-1.5 bg-black text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saved ? 'Saved!' : 'Save changes'}
+        </button>
+      </div>
+    </form>
   );
 }
 
-type Airport = {
-  id: string;
-  name: string;
-  city: string;
-  fee: number;
-};
-
-function AirportManager() {
+function LocationsTab() {
   const [airports, setAirports] = useState<Airport[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -182,87 +174,80 @@ function AirportManager() {
     setAirports((prev) => prev.filter((a) => a.id !== id));
   };
 
+  if (loading) {
+    return <div className="flex items-center gap-2 text-gray-400 text-sm py-8"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>;
+  }
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-1">Airport Drop-off Locations</h2>
-        <p className="text-sm text-gray-500 mb-5">These appear as drop-off options during booking. Customers pay the extra fee on top of the rental.</p>
+    <div className="space-y-4">
+      <p className="text-sm text-gray-500 mb-6">Locations shown as drop-off options during booking. Customers pay the extra fee on top of the rental.</p>
 
-        {loading ? (
-          <div className="flex items-center gap-2 text-gray-400 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>
-        ) : (
-          <>
-            {airports.length > 0 && (
-              <div className="mb-5 space-y-2">
-                {airports.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{a.name}</p>
-                      <p className="text-xs text-gray-500">{a.city} — <strong>${a.fee}</strong> drop-off fee</p>
-                    </div>
-                    <button
-                      onClick={() => handleDelete(a.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_100px_auto] gap-3 items-end">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-600">Airport name</label>
-                <input
-                  required
-                  type="text"
-                  placeholder="Puerto Plata Airport"
-                  value={form.name}
-                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-600">City</label>
-                <input
-                  required
-                  type="text"
-                  placeholder="Puerto Plata"
-                  value={form.city}
-                  onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-600">Fee ($)</label>
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  placeholder="30"
-                  value={form.fee}
-                  onChange={(e) => setForm((p) => ({ ...p, fee: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
-                />
+      {airports.length > 0 && (
+        <div className="space-y-2 mb-6">
+          {airports.map((a) => (
+            <div key={a.id} className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-gray-900">{a.name}</p>
+                <p className="text-xs text-gray-500">{a.city} — <strong>${a.fee}</strong> drop-off fee</p>
               </div>
               <button
-                type="submit"
-                disabled={saving}
-                className="flex items-center gap-1.5 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
+                onClick={() => handleDelete(a.id)}
+                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
               >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                Add
+                <Trash2 className="w-4 h-4" />
               </button>
-            </form>
-          </>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {airports.length === 0 && (
+        <div className="py-8 text-center text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl mb-6">
+          No locations yet. Add one below.
+        </div>
+      )}
+
+      <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_100px_auto] gap-3 items-end">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">Airport name</label>
+          <input
+            required type="text" placeholder="Puerto Plata Airport"
+            value={form.name}
+            onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">City</label>
+          <input
+            required type="text" placeholder="Puerto Plata"
+            value={form.city}
+            onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">Fee ($)</label>
+          <input
+            required type="number" min="0" placeholder="30"
+            value={form.fee}
+            onChange={(e) => setForm((p) => ({ ...p, fee: e.target.value }))}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
+          />
+        </div>
+        <button
+          type="submit" disabled={saving}
+          className="flex items-center gap-1.5 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          Add
+        </button>
+      </form>
     </div>
   );
 }
 
-export default function AdminSettings() {
+function AccountTab() {
   const [adminEmail, setAdminEmail] = useState('');
   const [env, setEnv] = useState('');
   const [appUrl, setAppUrl] = useState('');
@@ -275,36 +260,68 @@ export default function AdminSettings() {
   }, []);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 max-w-md">
+      <p className="text-sm text-gray-500">Read-only values set via environment variables on the server.</p>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Admin Email</label>
+        <input type="text" disabled value={adminEmail} className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-500 shadow-sm sm:text-sm" />
+        <p className="mt-1 text-xs text-gray-400">Set via ADMIN_EMAIL env var.</p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Environment</label>
+        <input type="text" disabled value={env} className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-500 shadow-sm sm:text-sm capitalize" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">App URL</label>
+        <input type="text" disabled value={appUrl} className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-500 shadow-sm sm:text-sm" />
+      </div>
+    </div>
+  );
+}
+
+const TABS = [
+  { id: 'pricing', label: 'Pricing' },
+  { id: 'locations', label: 'Locations' },
+  { id: 'account', label: 'Account' },
+] as const;
+
+type TabId = typeof TABS[number]['id'];
+
+export default function AdminSettings() {
+  const [activeTab, setActiveTab] = useState<TabId>('pricing');
+
+  return (
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Settings</h1>
-        <p className="mt-2 text-sm text-gray-500">System configuration and environment info.</p>
+        <p className="mt-1 text-sm text-gray-500">Manage pricing, drop-off locations, and account info.</p>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {/* Tab bar */}
+        <div className="border-b border-gray-100 px-6 pt-5 flex gap-1">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors border-b-2 -mb-px ${
+                activeTab === tab.id
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
         <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Account Information</h2>
-          <div className="space-y-4 max-w-md">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Admin Email</label>
-              <input type="text" disabled value={adminEmail} className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-500 shadow-sm sm:text-sm" />
-              <p className="mt-1 text-xs text-gray-400">Set via ADMIN_EMAIL environment variable.</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Environment</label>
-              <input type="text" disabled value={env} className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-500 shadow-sm sm:text-sm capitalize" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">App URL</label>
-              <input type="text" disabled value={appUrl} className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-500 shadow-sm sm:text-sm" />
-            </div>
-          </div>
+          {activeTab === 'pricing' && <PricingTab />}
+          {activeTab === 'locations' && <LocationsTab />}
+          {activeTab === 'account' && <AccountTab />}
         </div>
       </div>
-
-      <FeesManager />
-
-      <AirportManager />
     </div>
   );
 }

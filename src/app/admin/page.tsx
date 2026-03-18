@@ -42,25 +42,29 @@ export default async function AdminDashboard() {
     .map(([title, data]) => ({ title, ...data }));
 
   const stats = [
-    { label: 'Total Reservations', value: totalReservations.toString() },
-    { label: 'Revenue (excl. cancelled)', value: `$${totalRevenue.toLocaleString()}` },
-    { label: 'Upcoming', value: upcomingCount.toString() },
+    { label: 'Total Bookings', value: totalReservations.toString(), sub: 'All time' },
+    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString()}`, sub: 'Excluding cancelled' },
+    { label: 'Upcoming', value: upcomingCount.toString(), sub: 'Active reservations' },
   ];
+
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
     <div className="space-y-8">
       <div>
+        <p className="text-sm text-gray-400 mb-1">{today}</p>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Overview</h1>
-        <p className="mt-2 text-sm text-gray-500">Manage your fleet, view reservations, and update pricing.</p>
+        <p className="mt-1 text-sm text-gray-500">Your fleet at a glance.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat) => (
           <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-gray-500">{stat.label}</h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{stat.label}</h3>
             <div className="mt-2">
               <span className="text-3xl font-bold tracking-tight text-gray-900">{stat.value}</span>
             </div>
+            <p className="mt-1 text-xs text-gray-400">{stat.sub}</p>
           </div>
         ))}
       </div>

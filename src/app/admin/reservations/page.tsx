@@ -57,36 +57,38 @@ export default function ReservationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Reservations</h1>
-          <p className="mt-2 text-sm text-gray-500">All bookings from your customers.</p>
+          <p className="mt-1 text-sm text-gray-500">All bookings from your customers.</p>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center border border-gray-200 bg-white rounded-xl px-4 py-2 shadow-sm flex-1 sm:w-72">
-            <Search className="w-5 h-5 text-gray-400 shrink-0" />
-            <input
-              type="text"
-              placeholder="Search guest, vehicle, email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-sm ml-2 placeholder:text-gray-400"
-            />
-          </div>
+        <div className="flex items-center gap-2 shrink-0">
           <a
             href="/api/admin/reservations/export"
             download
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition whitespace-nowrap"
           >
             <Download className="w-4 h-4" /> Export CSV
           </a>
           <Link
             href="/admin/reservations/new"
-            className="flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2.5 bg-black text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition whitespace-nowrap"
           >
             <Plus className="w-4 h-4" /> Manual booking
           </Link>
         </div>
+      </div>
+
+      {/* Filter bar */}
+      <div className="flex items-center border border-gray-200 bg-white rounded-xl px-4 py-2 shadow-sm w-full sm:max-w-sm">
+        <Search className="w-4 h-4 text-gray-400 shrink-0" />
+        <input
+          type="text"
+          placeholder="Search guest, vehicle, email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-sm ml-2 placeholder:text-gray-400"
+        />
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

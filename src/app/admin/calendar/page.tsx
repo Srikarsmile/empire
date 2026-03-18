@@ -63,7 +63,7 @@ export default function CalendarPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Calendar</h1>
-        <p className="mt-2 text-sm text-gray-500">Reservations by date.</p>
+        <p className="mt-1 text-sm text-gray-500">Reservations by date.</p>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

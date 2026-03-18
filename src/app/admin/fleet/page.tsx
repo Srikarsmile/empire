@@ -61,32 +61,33 @@ export default function FleetManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Fleet Management</h1>
-          <p className="mt-2 text-sm text-gray-500">Add, update, or remove vehicles from your rental inventory.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Fleet</h1>
+          <p className="mt-1 text-sm text-gray-500">Manage your rental vehicles.</p>
         </div>
-        <Link
-          href="/admin/fleet/new"
-          className="flex items-center justify-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-900 transition-colors shadow-sm w-full sm:w-auto mt-4 sm:mt-0"
-        >
-          <Plus className="w-4 h-4" />
-          Add New Vehicle
-        </Link>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center border border-gray-200 bg-white rounded-xl px-4 py-2 shadow-sm flex-1 sm:w-64">
+            <Search className="w-4 h-4 text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search vehicles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-sm ml-2 placeholder:text-gray-400"
+            />
+          </div>
+          <Link
+            href="/admin/fleet/new"
+            className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-900 transition-colors shadow-sm whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" />
+            Add Vehicle
+          </Link>
+        </div>
       </div>
 
-      <div className="flex items-center border border-gray-200 bg-white rounded-xl px-4 py-2 shadow-sm w-full sm:max-w-md">
-        <Search className="w-5 h-5 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search vehicles..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-sm ml-2 placeholder:text-gray-400"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCars.map((car) => (
           <div
             key={car.id}

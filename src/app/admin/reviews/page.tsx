@@ -39,7 +39,7 @@ export default function ReviewsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Reviews</h1>
-        <p className="mt-2 text-sm text-gray-500">All customer reviews across your fleet.</p>
+        <p className="mt-1 text-sm text-gray-500">All customer reviews across your fleet.</p>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
