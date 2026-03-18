@@ -84,7 +84,7 @@ export const defaultContent: SiteContentData = {
     columns: [
       { title: 'Support', links: [{ title: 'Airport pickup', url: '#' }, { title: 'Insurance support', url: '#' }, { title: 'Roadside help', url: '#' }] },
       { title: 'Rental Info', links: [{ title: 'Driver requirements', url: '#' }, { title: 'Fuel policy', url: '#' }, { title: 'Long-stay pricing', url: '#' }] },
-      { title: 'Legal', links: [{ title: 'Privacy Policy', url: '#' }, { title: 'Terms of Service', url: '#' }, { title: 'Sitemap', url: '#' }] },
+      { title: 'Legal', links: [{ title: 'Privacy Policy', url: '/privacy' }, { title: 'Terms of Service', url: '/terms' }, { title: 'Sitemap', url: '#' }] },
     ],
   },
   howToRent: {
