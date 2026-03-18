@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export type Airport = {
   id: string;
@@ -25,11 +26,15 @@ async function saveAirports(airports: Airport[]) {
 }
 
 export async function GET() {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
   const airports = await getAirports();
   return NextResponse.json(airports);
 }
 
 export async function POST(request: Request) {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
   try {
     const body = (await request.json()) as { id?: string; name: string; city: string; fee: number };
     const airports = await getAirports();
@@ -52,6 +57,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
   try {
     const { id } = (await request.json()) as { id: string };
     const airports = await getAirports();

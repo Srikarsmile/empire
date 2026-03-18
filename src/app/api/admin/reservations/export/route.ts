@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET() {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
   const reservations = await prisma.reservation.findMany({
     orderBy: { createdAt: 'desc' },
   });

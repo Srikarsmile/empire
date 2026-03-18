@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { getVehicleById } from '@/lib/vehicleData';
 import { prisma } from '@/lib/prisma';
+import { getBookedSet, getStayNights } from '@/lib/dateUtils';
 
 async function getTaxRate(): Promise<number> {
   const content = await prisma.siteContent.findUnique({ where: { id: 'main' } });
@@ -29,6 +30,16 @@ export async function POST(request: Request) {
     const vehicle = await getVehicleById(body.vehicleId);
     if (!vehicle) {
       return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
+    }
+
+    // Prevent double-booking: reject if requested dates overlap any existing booked range
+    const bookedSet = getBookedSet(vehicle.bookedRanges);
+    const requestedNights = getStayNights(body.checkIn, body.checkOut);
+    if (requestedNights.some((day) => bookedSet.has(day))) {
+      return NextResponse.json(
+        { error: 'These dates are no longer available. Please choose different dates.' },
+        { status: 409 }
+      );
     }
 
     const nights = Number(body.nights);

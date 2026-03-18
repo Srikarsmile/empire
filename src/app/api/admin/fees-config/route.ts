@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,11 +25,15 @@ export async function getFeesConfig(): Promise<FeesConfig> {
 }
 
 export async function GET() {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
   const config = await getFeesConfig();
   return NextResponse.json(config);
 }
 
 export async function POST(request: Request) {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
   try {
     const body = (await request.json()) as Partial<FeesConfig>;
     const content = await prisma.siteContent.findUnique({ where: { id: 'main' } });

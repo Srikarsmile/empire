@@ -16,23 +16,28 @@ interface Review {
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
-  async function load() {
-    const res = await fetch('/api/admin/reviews');
-    setReviews(await res.json());
-    setLoading(false);
-  }
-
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    fetch('/api/admin/reviews')
+      .then((r) => { if (!r.ok) throw new Error('Load failed'); return r.json(); })
+      .then((data: Review[]) => { setReviews(data); setLoadError(false); setLoading(false); })
+      .catch(() => { setLoadError(true); setLoading(false); });
+  }, [loadAttempt]);
 
   async function deleteReview(vehicleId: string, reviewId: string) {
     if (!confirm('Delete this review?')) return;
-    await fetch('/api/admin/reviews', {
+    const res = await fetch('/api/admin/reviews', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ vehicleId, reviewId }),
     });
-    setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+    if (res.ok) {
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+    } else {
+      alert('Failed to delete review. Please try again.');
+    }
   }
 
   return (
@@ -45,6 +50,11 @@ export default function ReviewsPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-gray-500 text-sm">Loading...</div>
+        ) : loadError ? (
+          <div className="p-12 text-center">
+            <p className="text-sm text-red-600 mb-3">Failed to load reviews.</p>
+            <button onClick={() => { setLoading(true); setLoadAttempt((a) => a + 1); }} className="text-sm font-medium text-red-700 underline underline-offset-2 hover:text-red-900">Retry</button>
+          </div>
         ) : reviews.length === 0 ? (
           <div className="p-12 text-center text-gray-500 text-sm">No reviews yet.</div>
         ) : (

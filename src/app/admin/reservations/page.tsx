@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Plus, Download } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Plus, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface Reservation {
   id: string;
@@ -20,47 +21,117 @@ interface Reservation {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  upcoming: 'bg-blue-100 text-blue-700',
+  upcoming:  'bg-blue-100 text-blue-700',
   completed: 'bg-green-100 text-green-700',
   cancelled: 'bg-red-100 text-red-700',
 };
 
+const PAGE_SIZE = 20;
+
 export default function ReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [search, setSearch] = useState("");
+  const [total, setTotal]       = useState(0);
+  const [pages, setPages]       = useState(1);
+  const [page, setPage]         = useState(1);
+  const [search, setSearch]     = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [toast, setToast]       = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch('/api/admin/reservations')
-      .then((r) => r.json())
-      .then((data) => { setReservations(data); setIsLoading(false); })
-      .catch(() => setIsLoading(false));
+  // Confirm dialog for cancelling a booking
+  const [confirmCancel, setConfirmCancel] = useState<{ id: string; name: string } | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<{ id: string; status: string } | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const loadPage = useCallback(async (p: number, q: string, st: string) => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(p), limit: String(PAGE_SIZE) });
+      if (q)  params.set('search', q);
+      if (st) params.set('status', st);
+      const res = await fetch(`/api/admin/reservations?${params}`);
+      const json = await res.json();
+      setReservations(json.data ?? []);
+      setTotal(json.total ?? 0);
+      setPages(json.pages ?? 1);
+      setPage(json.page ?? 1);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  async function updateStatus(id: string, status: string) {
-    await fetch(`/api/admin/reservations/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    setReservations((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
-  }
+  useEffect(() => {
+    const t = setTimeout(() => loadPage(1, search, statusFilter), 300);
+    return () => clearTimeout(t);
+  }, [search, statusFilter, loadPage]);
 
-  const filtered = reservations.filter((r) => {
-    const q = search.toLowerCase();
-    return (
-      `${r.firstName} ${r.lastName}`.toLowerCase().includes(q) ||
-      r.vehicleTitle.toLowerCase().includes(q) ||
-      r.email.toLowerCase().includes(q)
-    );
-  });
+  const handleStatusChange = (id: string, firstName: string, lastName: string, newStatus: string) => {
+    if (newStatus === 'cancelled') {
+      setPendingStatus({ id, status: newStatus });
+      setConfirmCancel({ id, name: `${firstName} ${lastName}` });
+    } else {
+      applyStatus(id, newStatus);
+    }
+  };
+
+  const applyStatus = async (id: string, status: string) => {
+    const previous = reservations.find((r) => r.id === id)?.status;
+    setReservations((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
+    try {
+      const res = await fetch(`/api/admin/reservations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error('Update failed');
+      showToast(`Booking marked as ${status}.`);
+    } catch {
+      // Revert optimistic update
+      if (previous !== undefined) {
+        setReservations((prev) => prev.map((r) => r.id === id ? { ...r, status: previous } : r));
+      }
+      showToast('Failed to update status. Please try again.');
+    }
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!pendingStatus) return;
+    await applyStatus(pendingStatus.id, pendingStatus.status);
+    setConfirmCancel(null);
+    setPendingStatus(null);
+  };
 
   return (
     <div className="space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-xl">
+          {toast}
+        </div>
+      )}
+
+      {/* Confirm cancel */}
+      <ConfirmDialog
+        isOpen={!!confirmCancel}
+        title={`Cancel booking for ${confirmCancel?.name}?`}
+        message="This will mark the reservation as cancelled. The guest will not be automatically refunded — you must handle that separately."
+        confirmLabel="Cancel Booking"
+        danger
+        onConfirm={handleCancelConfirm}
+        onCancel={() => { setConfirmCancel(null); setPendingStatus(null); }}
+      />
+
+      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Reservations</h1>
-          <p className="mt-1 text-sm text-gray-500">All bookings from your customers.</p>
+          <p className="mt-1 text-sm text-gray-500">
+            {total > 0 ? `${total} booking${total !== 1 ? 's' : ''}` : 'All bookings from your customers.'}
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <a
@@ -79,24 +150,37 @@ export default function ReservationsPage() {
         </div>
       </div>
 
-      {/* Filter bar */}
-      <div className="flex items-center border border-gray-200 bg-white rounded-xl px-4 py-2 shadow-sm w-full sm:max-w-sm">
-        <Search className="w-4 h-4 text-gray-400 shrink-0" />
-        <input
-          type="text"
-          placeholder="Search guest, vehicle, email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-sm ml-2 placeholder:text-gray-400"
-        />
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex items-center border border-gray-200 bg-white rounded-xl px-4 py-2 shadow-sm flex-1 sm:max-w-sm">
+          <Search className="w-4 h-4 text-gray-400 shrink-0" />
+          <input
+            type="text"
+            placeholder="Search guest, vehicle, email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-sm ml-2 placeholder:text-gray-400"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2 border border-gray-200 text-sm text-gray-700 font-medium rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+        >
+          <option value="">All statuses</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
       </div>
 
+      {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-gray-500 text-sm">Loading...</div>
-        ) : filtered.length === 0 ? (
+        ) : reservations.length === 0 ? (
           <div className="p-12 text-center text-gray-500 text-sm">
-            {search ? 'No reservations match your search.' : 'No reservations yet.'}
+            {search || statusFilter ? 'No reservations match your filters.' : 'No reservations yet.'}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -109,7 +193,7 @@ export default function ReservationsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((r) => (
+                {reservations.map((r) => (
                   <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{r.firstName} {r.lastName}</td>
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{r.email}</td>
@@ -121,7 +205,7 @@ export default function ReservationsPage() {
                     <td className="px-6 py-4">
                       <select
                         value={r.status}
-                        onChange={(e) => updateStatus(r.id, e.target.value)}
+                        onChange={(e) => handleStatusChange(r.id, r.firstName, r.lastName, e.target.value)}
                         className={`text-xs font-medium rounded-full px-2.5 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10 ${STATUS_COLORS[r.status] ?? 'bg-gray-100 text-gray-700'}`}
                       >
                         <option value="upcoming">Upcoming</option>
@@ -139,6 +223,49 @@ export default function ReservationsPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Page {page} of {pages} &nbsp;·&nbsp; {total} total
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => loadPage(page - 1, search, statusFilter)}
+              disabled={page <= 1}
+              aria-label="Previous page"
+              className="p-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            {Array.from({ length: Math.min(5, pages) }, (_, i) => {
+              const p = Math.max(1, Math.min(pages - 4, page - 2)) + i;
+              return (
+                <button
+                  key={p}
+                  onClick={() => loadPage(p, search, statusFilter)}
+                  className={`w-9 h-9 text-sm rounded-xl border transition-colors font-medium ${
+                    p === page
+                      ? 'bg-black text-white border-black'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => loadPage(page + 1, search, statusFilter)}
+              disabled={page >= pages}
+              aria-label="Next page"
+              className="p-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

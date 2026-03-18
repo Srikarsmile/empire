@@ -7,12 +7,15 @@ import { defaultContent } from '@/lib/siteContent';
 export default function ContentPage() {
   const [content, setContent] = useState<SiteContentData>(defaultContent);
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     fetch('/api/admin/content')
-      .then((r) => r.json())
-      .then(setContent);
-  }, []);
+      .then((r) => { if (!r.ok) throw new Error('Load failed'); return r.json(); })
+      .then((data) => { setContent(data); setLoadError(false); })
+      .catch(() => setLoadError(true));
+  }, [loadAttempt]);
 
   async function save() {
     setStatus('saving');
@@ -74,6 +77,13 @@ export default function ContentPage() {
           {status === 'saving' ? 'Saving...' : status === 'saved' ? 'Saved ✓' : status === 'error' ? 'Error — retry' : 'Save changes'}
         </button>
       </div>
+
+      {loadError && (
+        <div className="py-6 px-5 text-center bg-red-50 rounded-2xl border border-red-100">
+          <p className="text-sm text-red-600 mb-2">Failed to load site content.</p>
+          <button onClick={() => setLoadAttempt((a) => a + 1)} className="text-sm font-medium text-red-700 underline underline-offset-2 hover:text-red-900">Retry</button>
+        </div>
+      )}
 
       <div className="space-y-8">
 

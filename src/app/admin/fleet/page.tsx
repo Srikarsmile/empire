@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Search, Edit2, Trash2, PauseCircle, PlayCircle } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface VehicleRecord {
   id: string;
@@ -16,51 +17,123 @@ interface VehicleRecord {
 
 export default function FleetManagement() {
   const [cars, setCars] = useState<VehicleRecord[]>([]);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  // Confirm dialog state
+  const [confirm, setConfirm] = useState<{
+    id: string;
+    title: string;
+    action: 'delete' | 'pause' | 'resume';
+  } | null>(null);
 
   useEffect(() => {
     fetch('/api/vehicles?all=1')
       .then((r) => r.json())
-      .then(setCars)
-      .catch(() => {});
-  }, []);
+      .then((data) => { setCars(data); setLoadError(false); })
+      .catch(() => setLoadError(true));
+  }, [loadAttempt]);
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
-    setDeletingId(id);
-    try {
-      const res = await fetch(`/api/vehicles/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setCars((prev) => prev.filter((c) => c.id !== id));
-      } else {
-        alert('Failed to delete vehicle.');
-      }
-    } finally {
-      setDeletingId(null);
-    }
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3500);
   };
 
-  const handleTogglePause = async (id: string, currentlyPaused: boolean) => {
-    setTogglingId(id);
-    const res = await fetch(`/api/vehicles/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paused: !currentlyPaused }),
-    });
-    if (res.ok) {
-      setCars((prev) => prev.map((c) => c.id === id ? { ...c, paused: !currentlyPaused } : c));
+  const handleDeleteRequest = (id: string, title: string) => {
+    setConfirm({ id, title, action: 'delete' });
+  };
+
+  const handleToggleRequest = (id: string, title: string, currentlyPaused: boolean) => {
+    setConfirm({ id, title, action: currentlyPaused ? 'resume' : 'pause' });
+  };
+
+  const handleConfirm = async () => {
+    if (!confirm) return;
+    const { id, action } = confirm;
+    setConfirm(null);
+
+    if (action === 'delete') {
+      setDeletingId(id);
+      try {
+        const res = await fetch(`/api/vehicles/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          setCars((prev) => prev.filter((c) => c.id !== id));
+          showToast('Vehicle deleted.');
+        } else {
+          showToast('Failed to delete vehicle.');
+        }
+      } finally {
+        setDeletingId(null);
+      }
+    } else {
+      const paused = action === 'pause';
+      setTogglingId(id);
+      const res = await fetch(`/api/vehicles/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paused }),
+      });
+      if (res.ok) {
+        setCars((prev) => prev.map((c) => c.id === id ? { ...c, paused } : c));
+        showToast(paused ? 'Listing paused.' : 'Listing resumed.');
+      }
+      setTogglingId(null);
     }
-    setTogglingId(null);
   };
 
   const filteredCars = cars.filter((car) =>
     car.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const confirmMeta = confirm
+    ? confirm.action === 'delete'
+      ? {
+          title: `Delete "${confirm.title}"?`,
+          message: 'This vehicle and all its data will be permanently deleted. This cannot be undone.',
+          label: 'Delete Vehicle',
+          danger: true,
+        }
+      : confirm.action === 'pause'
+      ? {
+          title: `Pause "${confirm.title}"?`,
+          message: 'This vehicle will be hidden from guests and unavailable for new bookings.',
+          label: 'Pause Listing',
+          danger: false,
+        }
+      : {
+          title: `Resume "${confirm.title}"?`,
+          message: 'This vehicle will become visible to guests and available for booking again.',
+          label: 'Resume Listing',
+          danger: false,
+        }
+    : null;
+
   return (
     <div className="space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-xl animate-in slide-in-from-bottom-4 duration-200">
+          {toast}
+        </div>
+      )}
+
+      {/* Confirm Dialog */}
+      {confirm && confirmMeta && (
+        <ConfirmDialog
+          isOpen
+          title={confirmMeta.title}
+          message={confirmMeta.message}
+          confirmLabel={confirmMeta.label}
+          danger={confirmMeta.danger}
+          onConfirm={handleConfirm}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Fleet</h1>
@@ -86,6 +159,18 @@ export default function FleetManagement() {
           </Link>
         </div>
       </div>
+
+      {loadError && (
+        <div className="py-12 text-center bg-red-50 rounded-2xl border border-red-100">
+          <p className="text-sm text-red-600 mb-3">Failed to load vehicles.</p>
+          <button
+            onClick={() => setLoadAttempt((a) => a + 1)}
+            className="text-sm font-medium text-red-700 underline underline-offset-2 hover:text-red-900"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCars.map((car) => (
@@ -120,8 +205,9 @@ export default function FleetManagement() {
               {/* Action buttons */}
               <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                 <button
-                  onClick={() => handleTogglePause(car.id, car.paused)}
+                  onClick={() => handleToggleRequest(car.id, car.title, car.paused)}
                   disabled={togglingId === car.id}
+                  aria-label={car.paused ? 'Resume listing' : 'Pause listing'}
                   title={car.paused ? 'Resume listing' : 'Pause listing'}
                   className={`p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm transition-colors disabled:opacity-50 ${
                     car.paused
@@ -136,13 +222,15 @@ export default function FleetManagement() {
                 </button>
                 <Link
                   href={`/admin/fleet/${car.id}/edit`}
+                  aria-label="Edit vehicle"
                   className="p-1.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-lg shadow-sm hover:text-black hover:bg-white transition-colors"
                 >
                   <Edit2 className="w-4 h-4" />
                 </Link>
                 <button
-                  onClick={() => handleDelete(car.id, car.title)}
+                  onClick={() => handleDeleteRequest(car.id, car.title)}
                   disabled={deletingId === car.id}
+                  aria-label="Delete vehicle"
                   className="p-1.5 bg-white/90 backdrop-blur-sm text-red-600 rounded-lg shadow-sm hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />

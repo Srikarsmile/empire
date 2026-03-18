@@ -23,12 +23,15 @@ export default function CalendarPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [date, setDate] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
-    fetch('/api/admin/reservations')
-      .then((r) => r.json())
-      .then((data) => { setReservations(data); setLoading(false); });
-  }, []);
+    fetch('/api/admin/reservations?limit=1000')
+      .then((r) => { if (!r.ok) throw new Error('Load failed'); return r.json(); })
+      .then((data) => { setReservations(data.data ?? data); setLoadError(false); setLoading(false); })
+      .catch(() => { setLoadError(true); setLoading(false); });
+  }, [loadAttempt]);
 
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -106,6 +109,11 @@ export default function CalendarPage() {
         {/* Grid */}
         {loading ? (
           <div className="p-12 text-center text-gray-400 text-sm">Loading...</div>
+        ) : loadError ? (
+          <div className="p-12 text-center">
+            <p className="text-sm text-red-600 mb-3">Failed to load reservations.</p>
+            <button onClick={() => { setLoading(true); setLoadAttempt((a) => a + 1); }} className="text-sm font-medium text-red-700 underline underline-offset-2 hover:text-red-900">Retry</button>
+          </div>
         ) : (
           <div className="grid grid-cols-7">
             {cells.map((day, idx) => {

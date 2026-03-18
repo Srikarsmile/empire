@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { ReviewItem } from '@/data/vehicleMeta';
+import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET() {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
   const vehicles = await prisma.vehicle.findMany({
     select: { id: true, title: true, reviews: true },
   });
@@ -20,6 +23,8 @@ export async function GET() {
 }
 
 export async function DELETE(request: Request) {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
   const { vehicleId, reviewId } = await request.json();
 
   const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });

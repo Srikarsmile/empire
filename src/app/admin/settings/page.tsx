@@ -37,6 +37,7 @@ function PricingTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/fees-config')
@@ -49,14 +50,22 @@ function PricingTab() {
     e.preventDefault();
     setSaving(true);
     setSaved(false);
-    await fetch('/api/admin/fees-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(config),
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaveError(false);
+    try {
+      const res = await fetch('/api/admin/fees-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setSaveError(true);
+      setTimeout(() => setSaveError(false), 3000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const inputCls = 'rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none w-28';
@@ -127,7 +136,7 @@ function PricingTab() {
           className="flex items-center gap-1.5 bg-black text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saved ? 'Saved!' : 'Save changes'}
+          {saving ? 'Saving...' : saved ? 'Saved!' : saveError ? 'Save failed — retry' : 'Save changes'}
         </button>
       </div>
     </form>
@@ -166,12 +175,16 @@ function LocationsTab() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Remove this airport?')) return;
-    await fetch('/api/admin/airports', {
+    const res = await fetch('/api/admin/airports', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     });
-    setAirports((prev) => prev.filter((a) => a.id !== id));
+    if (res.ok) {
+      setAirports((prev) => prev.filter((a) => a.id !== id));
+    } else {
+      alert('Failed to remove location. Please try again.');
+    }
   };
 
   if (loading) {
