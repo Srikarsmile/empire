@@ -1,6 +1,13 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { getVehicleById } from '@/lib/vehicleData';
+import { prisma } from '@/lib/prisma';
+
+async function getTaxRate(): Promise<number> {
+  const content = await prisma.siteContent.findUnique({ where: { id: 'main' } });
+  const data = (content?.data ?? {}) as Record<string, unknown>;
+  return typeof data.taxRate === 'number' ? data.taxRate : 14;
+}
 
 export async function POST(request: Request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -26,8 +33,9 @@ export async function POST(request: Request) {
     const nights = Number(body.nights);
     const airportFee = Number(body.airportFee ?? 0);
     const dropoffLocation = body.dropoffLocation ?? '';
+    const taxRate = await getTaxRate();
     const subtotal = vehicle.price * nights;
-    const taxes = Math.round(subtotal * 0.14);
+    const taxes = Math.round(subtotal * (taxRate / 100));
     const total = subtotal + taxes + airportFee;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 

@@ -1,7 +1,74 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, Save } from 'lucide-react';
+
+function TaxRateManager() {
+  const [taxRate, setTaxRate] = useState<string>('14');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/tax-rate')
+      .then((r) => r.json())
+      .then((d) => { setTaxRate(String(d.taxRate ?? 14)); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setSaved(false);
+    await fetch('/api/admin/tax-rate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taxRate: Number(taxRate) }),
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-1">Tax &amp; Service Fee</h2>
+        <p className="text-sm text-gray-500 mb-5">Applied to every booking as a percentage of the rental subtotal.</p>
+        {loading ? (
+          <div className="flex items-center gap-2 text-gray-400 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>
+        ) : (
+          <form onSubmit={handleSave} className="flex items-end gap-3 max-w-xs">
+            <div className="flex-1 space-y-1">
+              <label className="text-xs font-medium text-gray-600">Rate (%)</label>
+              <div className="relative">
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex items-center gap-1.5 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saved ? 'Saved!' : 'Save'}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
 
 type Airport = {
   id: string;
@@ -169,6 +236,8 @@ export default function AdminSettings() {
           </div>
         </div>
       </div>
+
+      <TaxRateManager />
 
       <AirportManager />
     </div>

@@ -124,6 +124,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const [dateSelectionNotice, setDateSelectionNotice] = useState('');
   const [airports, setAirports] = useState<Airport[]>([]);
   const [selectedAirportId, setSelectedAirportId] = useState<string>('');
+  const [taxRate, setTaxRate] = useState(14);
 
   useEffect(() => {
     fetch(`/api/vehicles/${vehicleId}`)
@@ -137,6 +138,10 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
     fetch('/api/admin/airports')
       .then((res) => res.json())
       .then((data) => setAirports(Array.isArray(data) ? data : []))
+      .catch(() => {});
+    fetch('/api/admin/tax-rate')
+      .then((res) => res.json())
+      .then((d) => { if (typeof d.taxRate === 'number') setTaxRate(d.taxRate); })
       .catch(() => {});
   }, [vehicleId]);
 
@@ -183,7 +188,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const selectedAirport = airports.find((a) => a.id === selectedAirportId) ?? null;
   const airportFee = selectedAirport?.fee ?? 0;
   const subtotal = (vehicle?.price ?? 0) * nights;
-  const taxes = Math.round(subtotal * 0.14);
+  const taxes = Math.round(subtotal * (taxRate / 100));
   const total = subtotal + taxes + airportFee;
 
   const markTouched = (field: keyof FormData) => {
