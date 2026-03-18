@@ -7,10 +7,9 @@ export async function POST(request: Request) {
   const { email } = await request.json();
 
   const normalizedEmail = String(email).toLowerCase().trim();
-  const adminEmails = String(process.env.ADMIN_EMAIL ?? '').toLowerCase().split(',').map(e => e.trim());
 
-  if (!normalizedEmail || !adminEmails.includes(normalizedEmail)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 400 });
+  if (!normalizedEmail) {
+    return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
 
   const code = String(Math.floor(100000 + Math.random() * 900000));
