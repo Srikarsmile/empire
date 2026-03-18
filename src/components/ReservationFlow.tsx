@@ -125,6 +125,10 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const [airports, setAirports] = useState<Airport[]>([]);
   const [selectedAirportId, setSelectedAirportId] = useState<string>('');
   const [taxRate, setTaxRate] = useState(14);
+  const [taxEnabled, setTaxEnabled] = useState(true);
+  const [airportEnabled, setAirportEnabled] = useState(true);
+  const [insuranceEnabled, setInsuranceEnabled] = useState(false);
+  const [insuranceFee, setInsuranceFee] = useState(0);
 
   useEffect(() => {
     fetch(`/api/vehicles/${vehicleId}`)
@@ -139,9 +143,15 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
       .then((res) => res.json())
       .then((data) => setAirports(Array.isArray(data) ? data : []))
       .catch(() => {});
-    fetch('/api/admin/tax-rate')
+    fetch('/api/admin/fees-config')
       .then((res) => res.json())
-      .then((d) => { if (typeof d.taxRate === 'number') setTaxRate(d.taxRate); })
+      .then((d) => {
+        if (typeof d.taxRate === 'number') setTaxRate(d.taxRate);
+        if (typeof d.taxEnabled === 'boolean') setTaxEnabled(d.taxEnabled);
+        if (typeof d.airportEnabled === 'boolean') setAirportEnabled(d.airportEnabled);
+        if (typeof d.insuranceEnabled === 'boolean') setInsuranceEnabled(d.insuranceEnabled);
+        if (typeof d.insuranceFee === 'number') setInsuranceFee(d.insuranceFee);
+      })
       .catch(() => {});
   }, [vehicleId]);
 
@@ -185,11 +195,12 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
     return '';
   }, [checkIn, checkOut, nights, vehicle]);
 
-  const selectedAirport = airports.find((a) => a.id === selectedAirportId) ?? null;
+  const selectedAirport = (airportEnabled ? airports.find((a) => a.id === selectedAirportId) : null) ?? null;
   const airportFee = selectedAirport?.fee ?? 0;
   const subtotal = (vehicle?.price ?? 0) * nights;
-  const taxes = Math.round(subtotal * (taxRate / 100));
-  const total = subtotal + taxes + airportFee;
+  const taxes = taxEnabled ? Math.round(subtotal * (taxRate / 100)) : 0;
+  const appliedInsuranceFee = insuranceEnabled ? insuranceFee : 0;
+  const total = subtotal + taxes + airportFee + appliedInsuranceFee;
 
   const markTouched = (field: keyof FormData) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -213,6 +224,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
           nights,
           airportFee,
           dropoffLocation: selectedAirport ? `${selectedAirport.name}, ${selectedAirport.city}` : '',
+          insuranceFee: appliedInsuranceFee,
         }),
       });
 
@@ -286,7 +298,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                 </div>
               </div>
 
-              {airports.length > 0 && (
+              {airportEnabled && airports.length > 0 && (
                 <div className="info-card">
                   <h2>Airport drop-off <span style={{ fontSize: '0.8em', fontWeight: 400, color: 'var(--ink-500)' }}>(optional)</span></h2>
                   <p style={{ fontSize: '0.875rem', color: 'var(--ink-500)', marginBottom: '1rem' }}>
@@ -362,14 +374,22 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                     </span>
                     <strong>${subtotal}</strong>
                   </div>
-                  <div>
-                    <span>Taxes and service</span>
-                    <strong>${taxes}</strong>
-                  </div>
+                  {taxEnabled && (
+                    <div>
+                      <span>Taxes and service ({taxRate}%)</span>
+                      <strong>${taxes}</strong>
+                    </div>
+                  )}
                   {airportFee > 0 && (
                     <div>
                       <span>Airport drop-off</span>
                       <strong>${airportFee}</strong>
+                    </div>
+                  )}
+                  {insuranceEnabled && appliedInsuranceFee > 0 && (
+                    <div>
+                      <span>Insurance</span>
+                      <strong>${appliedInsuranceFee}</strong>
                     </div>
                   )}
                   <div className="total-row">

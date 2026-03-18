@@ -3,16 +3,38 @@
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Loader2, Save } from 'lucide-react';
 
-function TaxRateManager() {
-  const [taxRate, setTaxRate] = useState<string>('14');
+type FeesConfig = {
+  taxRate: number;
+  taxEnabled: boolean;
+  airportEnabled: boolean;
+  insuranceEnabled: boolean;
+  insuranceFee: number;
+};
+
+function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!enabled)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-black' : 'bg-gray-200'}`}
+    >
+      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+    </button>
+  );
+}
+
+function FeesManager() {
+  const [config, setConfig] = useState<FeesConfig>({
+    taxRate: 14, taxEnabled: true, airportEnabled: true, insuranceEnabled: false, insuranceFee: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetch('/api/admin/tax-rate')
+    fetch('/api/admin/fees-config')
       .then((r) => r.json())
-      .then((d) => { setTaxRate(String(d.taxRate ?? 14)); setLoading(false); })
+      .then((d) => { setConfig(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
@@ -20,49 +42,92 @@ function TaxRateManager() {
     e.preventDefault();
     setSaving(true);
     setSaved(false);
-    await fetch('/api/admin/tax-rate', {
+    await fetch('/api/admin/fees-config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ taxRate: Number(taxRate) }),
+      body: JSON.stringify(config),
     });
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const inputCls = 'rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none w-28';
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-1">Tax &amp; Service Fee</h2>
-        <p className="text-sm text-gray-500 mb-5">Applied to every booking as a percentage of the rental subtotal.</p>
+        <h2 className="text-lg font-medium text-gray-900 mb-1">Price Breakdown</h2>
+        <p className="text-sm text-gray-500 mb-5">Toggle each fee on/off and set its value. Changes apply to all new bookings.</p>
+
         {loading ? (
           <div className="flex items-center gap-2 text-gray-400 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>
         ) : (
-          <form onSubmit={handleSave} className="flex items-end gap-3 max-w-xs">
-            <div className="flex-1 space-y-1">
-              <label className="text-xs font-medium text-gray-600">Rate (%)</label>
+          <form onSubmit={handleSave} className="space-y-4">
+            {/* Tax row */}
+            <div className="flex items-center justify-between py-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <Toggle enabled={config.taxEnabled} onChange={(v) => setConfig((p) => ({ ...p, taxEnabled: v }))} />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Taxes &amp; Service Fee</p>
+                  <p className="text-xs text-gray-400">Percentage of rental subtotal</p>
+                </div>
+              </div>
               <div className="relative">
                 <input
-                  required
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={taxRate}
-                  onChange={(e) => setTaxRate(e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
+                  type="number" min="0" max="100" step="0.1"
+                  value={config.taxRate}
+                  disabled={!config.taxEnabled}
+                  onChange={(e) => setConfig((p) => ({ ...p, taxRate: Number(e.target.value) }))}
+                  className={`${inputCls} pr-8 disabled:opacity-40`}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
               </div>
             </div>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-1.5 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
-            >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {saved ? 'Saved!' : 'Save'}
-            </button>
+
+            {/* Airport row */}
+            <div className="flex items-center justify-between py-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <Toggle enabled={config.airportEnabled} onChange={(v) => setConfig((p) => ({ ...p, airportEnabled: v }))} />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Airport Drop-off</p>
+                  <p className="text-xs text-gray-400">Show drop-off option during booking</p>
+                </div>
+              </div>
+              <span className="text-xs text-gray-400 italic">Fees set per airport in section below</span>
+            </div>
+
+            {/* Insurance row */}
+            <div className="flex items-center justify-between py-3">
+              <div className="flex items-center gap-3">
+                <Toggle enabled={config.insuranceEnabled} onChange={(v) => setConfig((p) => ({ ...p, insuranceEnabled: v }))} />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Insurance</p>
+                  <p className="text-xs text-gray-400">Fixed fee added to every booking</p>
+                </div>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                <input
+                  type="number" min="0" step="1"
+                  value={config.insuranceFee}
+                  disabled={!config.insuranceEnabled}
+                  onChange={(e) => setConfig((p) => ({ ...p, insuranceFee: Number(e.target.value) }))}
+                  className={`${inputCls} pl-7 disabled:opacity-40`}
+                />
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center gap-1.5 bg-black text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saved ? 'Saved!' : 'Save changes'}
+              </button>
+            </div>
           </form>
         )}
       </div>
@@ -237,7 +302,7 @@ export default function AdminSettings() {
         </div>
       </div>
 
-      <TaxRateManager />
+      <FeesManager />
 
       <AirportManager />
     </div>

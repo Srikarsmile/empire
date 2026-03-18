@@ -21,6 +21,7 @@ export type ReservationRecord = {
   phone: string;
   airportFee: number;
   dropoffLocation: string;
+  insuranceFee: number;
 };
 
 export async function getAllReservations(): Promise<ReservationRecord[]> {

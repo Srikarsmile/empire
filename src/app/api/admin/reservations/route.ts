@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     taxes: Number(body.taxes),
     airportFee: Number(body.airportFee ?? 0),
     dropoffLocation: body.dropoffLocation ?? '',
+    insuranceFee: Number(body.insuranceFee ?? 0),
     total: Number(body.total),
     firstName: body.firstName,
     lastName: body.lastName,
