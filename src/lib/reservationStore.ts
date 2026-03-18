@@ -19,6 +19,8 @@ export type ReservationRecord = {
   lastName: string;
   email: string;
   phone: string;
+  airportFee: number;
+  dropoffLocation: string;
 };
 
 export async function getAllReservations(): Promise<ReservationRecord[]> {

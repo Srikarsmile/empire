@@ -64,6 +64,8 @@ export async function POST(request: Request) {
       price: Number(meta.price),
       subtotal: Number(meta.subtotal),
       taxes: Number(meta.taxes),
+      airportFee: Number(meta.airportFee ?? 0),
+      dropoffLocation: meta.dropoffLocation ?? '',
       total: Number(meta.total),
       firstName: meta.firstName,
       lastName: meta.lastName,

@@ -307,11 +307,7 @@ export function CardStack<T extends CardStackItem>({
                     mass: 0.85,
                   }}
                   onClick={() => {
-                    if (isActive && item.href) {
-                      router.push(item.href);
-                    } else {
-                      setActive(i);
-                    }
+                    setActive(i);
                   }}
                   {...dragProps}
                 >
@@ -355,15 +351,6 @@ export function CardStack<T extends CardStackItem>({
               );
             })}
           </div>
-          {activeItem.href ? (
-            <Link
-              href={activeItem.href}
-              className="text-gray-500 hover:text-black transition"
-              aria-label="Open link"
-            >
-              <SquareArrowOutUpRight className="h-4 w-4" />
-            </Link>
-          ) : null}
         </div>
       ) : null}
     </div>

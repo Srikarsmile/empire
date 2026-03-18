@@ -26,6 +26,8 @@ model Reservation {
   lastName        String
   email           String
   phone           String
+  airportFee      Int      @default(0)
+  dropoffLocation String   @default("")
 }
 
 model Vehicle {

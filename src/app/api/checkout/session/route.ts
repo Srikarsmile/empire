@@ -14,6 +14,8 @@ export async function POST(request: Request) {
       lastName: string;
       email: string;
       phone: string;
+      airportFee?: number;
+      dropoffLocation?: string;
     };
 
     const vehicle = await getVehicleById(body.vehicleId);
@@ -22,9 +24,11 @@ export async function POST(request: Request) {
     }
 
     const nights = Number(body.nights);
+    const airportFee = Number(body.airportFee ?? 0);
+    const dropoffLocation = body.dropoffLocation ?? '';
     const subtotal = vehicle.price * nights;
     const taxes = Math.round(subtotal * 0.14);
-    const total = subtotal + taxes;
+    const total = subtotal + taxes + airportFee;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
     const session = await stripe.checkout.sessions.create({
@@ -37,7 +41,7 @@ export async function POST(request: Request) {
             unit_amount: total * 100,
             product_data: {
               name: `${vehicle.title} — ${nights} day${nights !== 1 ? 's' : ''}`,
-              description: `Pickup: ${body.checkIn}  •  Return: ${body.checkOut}`,
+              description: `Pickup: ${body.checkIn}  •  Return: ${body.checkOut}${dropoffLocation ? `  •  Drop-off: ${dropoffLocation}` : ''}`,
             },
           },
           quantity: 1,
@@ -55,6 +59,8 @@ export async function POST(request: Request) {
         price: String(vehicle.price),
         subtotal: String(subtotal),
         taxes: String(taxes),
+        airportFee: String(airportFee),
+        dropoffLocation,
         total: String(total),
         firstName: body.firstName,
         lastName: body.lastName,

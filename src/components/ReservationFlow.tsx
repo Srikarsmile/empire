@@ -107,6 +107,8 @@ function findFirstAvailableWindow(bookedRanges: DateRange[], minNights: number) 
   return { checkIn: fallbackStart, checkOut: fallbackEnd };
 }
 
+type Airport = { id: string; name: string; city: string; fee: number };
+
 export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -120,6 +122,8 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [dateSelectionNotice, setDateSelectionNotice] = useState('');
+  const [airports, setAirports] = useState<Airport[]>([]);
+  const [selectedAirportId, setSelectedAirportId] = useState<string>('');
 
   useEffect(() => {
     fetch(`/api/vehicles/${vehicleId}`)
@@ -130,6 +134,10 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
         setCheckIn(defaults.checkIn);
         setCheckOut(defaults.checkOut);
       });
+    fetch('/api/admin/airports')
+      .then((res) => res.json())
+      .then((data) => setAirports(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, [vehicleId]);
 
   const formErrors = useMemo(() => {
@@ -172,9 +180,11 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
     return '';
   }, [checkIn, checkOut, nights, vehicle]);
 
+  const selectedAirport = airports.find((a) => a.id === selectedAirportId) ?? null;
+  const airportFee = selectedAirport?.fee ?? 0;
   const subtotal = (vehicle?.price ?? 0) * nights;
   const taxes = Math.round(subtotal * 0.14);
-  const total = subtotal + taxes;
+  const total = subtotal + taxes + airportFee;
 
   const markTouched = (field: keyof FormData) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -196,6 +206,8 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
           checkIn,
           checkOut,
           nights,
+          airportFee,
+          dropoffLocation: selectedAirport ? `${selectedAirport.name}, ${selectedAirport.city}` : '',
         }),
       });
 
@@ -269,6 +281,29 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                 </div>
               </div>
 
+              {airports.length > 0 && (
+                <div className="info-card">
+                  <h2>Airport drop-off <span style={{ fontSize: '0.8em', fontWeight: 400, color: 'var(--ink-500)' }}>(optional)</span></h2>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--ink-500)', marginBottom: '1rem' }}>
+                    Need the car delivered to an airport? Select a location below.
+                  </p>
+                  <div className="field-block">
+                    <select
+                      value={selectedAirportId}
+                      onChange={(e) => setSelectedAirportId(e.target.value)}
+                      style={{ width: '100%', borderRadius: '0.75rem', border: '1px solid var(--border)', padding: '0.625rem 1rem', fontSize: '0.875rem', background: 'white' }}
+                    >
+                      <option value="">No airport drop-off</option>
+                      {airports.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}, {a.city} — +${a.fee}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
               <div className="info-card">
                 <h2>Rental calendar</h2>
                 <AvailabilityCalendar
@@ -326,6 +361,12 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                     <span>Taxes and service</span>
                     <strong>${taxes}</strong>
                   </div>
+                  {airportFee > 0 && (
+                    <div>
+                      <span>Airport drop-off</span>
+                      <strong>${airportFee}</strong>
+                    </div>
+                  )}
                   <div className="total-row">
                     <span>Total</span>
                     <strong>${total}</strong>
