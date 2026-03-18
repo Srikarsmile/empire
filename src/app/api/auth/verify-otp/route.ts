@@ -33,5 +33,6 @@ export async function POST(request: Request) {
   const response = NextResponse.json({ ok: true });
   response.cookies.set('empire_auth', '1', cookieOptions);
   response.cookies.set('empire_role', role, cookieOptions);
+  response.cookies.set('empire_email', normalizedEmail, cookieOptions);
   return response;
 }

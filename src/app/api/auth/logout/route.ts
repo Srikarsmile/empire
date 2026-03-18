@@ -12,5 +12,10 @@ export async function POST() {
     path: '/',
     maxAge: 0,
   });
+  response.cookies.set('empire_email', '', {
+    httpOnly: true,
+    path: '/',
+    maxAge: 0,
+  });
   return response;
 }
