@@ -6,6 +6,8 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import ImageManager from "@/components/admin/ImageManager";
 
+type Airport = { id: string; name: string; city: string; fee: number };
+
 interface VehicleRecord {
   id: string;
   title: string;
@@ -24,6 +26,7 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
+  const [airports, setAirports] = useState<Airport[]>([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -33,6 +36,13 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
     location: "",
     amenities: "",
   });
+
+  useEffect(() => {
+    fetch('/api/admin/airports')
+      .then((r) => r.json())
+      .then((data) => setAirports(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch(`/api/vehicles/${id}`)
@@ -128,7 +138,23 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Location</label>
-            <input name="location" type="text" value={form.location} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
+            {airports.length > 0 ? (
+              <select
+                name="location"
+                value={form.location}
+                onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all bg-white"
+              >
+                <option value="">Select location...</option>
+                {airports.map((a) => (
+                  <option key={a.id} value={`${a.name}, ${a.city}`}>
+                    {a.name}, {a.city}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input name="location" type="text" value={form.location} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
+            )}
           </div>
 
           <div className="space-y-2">

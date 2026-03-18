@@ -2,15 +2,25 @@
 
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ImageManager from "@/components/admin/ImageManager";
+
+type Airport = { id: string; name: string; city: string; fee: number };
 
 export default function AddVehicle() {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
+  const [airports, setAirports] = useState<Airport[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/airports')
+      .then((r) => r.json())
+      .then((data) => setAirports(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   const [form, setForm] = useState({
     make: "",
@@ -90,7 +100,23 @@ export default function AddVehicle() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Location</label>
-            <input name="location" type="text" value={form.location} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
+            {airports.length > 0 ? (
+              <select
+                name="location"
+                value={form.location}
+                onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all bg-white"
+              >
+                <option value="">Select location...</option>
+                {airports.map((a) => (
+                  <option key={a.id} value={`${a.name}, ${a.city}`}>
+                    {a.name}, {a.city}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input name="location" type="text" value={form.location} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
+            )}
           </div>
 
           <div className="space-y-2">

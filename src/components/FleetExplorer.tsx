@@ -97,7 +97,7 @@ function FleetCard({
       className="group relative flex flex-col bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:border-[var(--accent)] transition-colors duration-200 overflow-hidden"
       index={index}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)] block">
+      <Link href={`/reserve/${vehicle.id}`} className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)] block">
         <span
           className={`skeleton absolute inset-0 z-10 transition-opacity duration-500 ${imgLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         />
@@ -130,7 +130,7 @@ function FleetCard({
             />
           </svg>
         </button>
-      </div>
+      </Link>
 
       <div className="flex flex-col flex-grow p-5">
         <div className="flex justify-between items-start gap-4 mb-1">
