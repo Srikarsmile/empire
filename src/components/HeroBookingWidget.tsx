@@ -10,8 +10,11 @@ export default function HeroBookingWidget() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [useTwoColumns, setUseTwoColumns] = useState(false);
+  const [locationError, setLocationError] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const element = containerRef.current;
@@ -34,7 +37,25 @@ export default function HeroBookingWidget() {
     return () => observer.disconnect();
   }, []);
 
+  const handleCheckInChange = (value: string) => {
+    setCheckIn(value);
+    if (checkOut && checkOut <= value) {
+      setCheckOut("");
+    }
+  };
+
+  const handleCheckOutChange = (value: string) => {
+    if (checkIn && value <= checkIn) return;
+    setCheckOut(value);
+  };
+
   const handleSearch = () => {
+    if (!pickup) {
+      setLocationError(true);
+      return;
+    }
+    setLocationError(false);
+
     const params = new URLSearchParams();
     if (checkIn) params.set("checkIn", checkIn);
     if (checkOut) params.set("checkOut", checkOut);
@@ -64,8 +85,14 @@ export default function HeroBookingWidget() {
           <div className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[var(--accent)]" />
           <select
             value={pickup}
-            onChange={(e) => setPickup(e.target.value)}
-            className="w-full bg-[var(--surface-soft)] rounded-xl h-14 pl-10 pr-4 font-semibold text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] appearance-none"
+            onChange={(e) => {
+              setPickup(e.target.value);
+              setLocationError(false);
+            }}
+            className={cn(
+              "w-full bg-[var(--surface-soft)] rounded-xl h-14 pl-10 pr-4 font-semibold text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] appearance-none",
+              locationError && "ring-2 ring-[var(--danger)]",
+            )}
           >
             <option value="" disabled>Select a location</option>
             <option value="PUJ">Punta Cana International Airport (PUJ)</option>
@@ -76,6 +103,9 @@ export default function HeroBookingWidget() {
             <option value="AZS">Samaná El Catey International Airport (AZS)</option>
           </select>
         </div>
+        {locationError && (
+          <p className="error-text">Please select a location</p>
+        )}
       </div>
 
       <div
@@ -92,7 +122,8 @@ export default function HeroBookingWidget() {
             <input
               type="date"
               value={checkIn}
-              onChange={(e) => setCheckIn(e.target.value)}
+              min={today}
+              onChange={(e) => handleCheckInChange(e.target.value)}
               className={cn(
                 "hero-booking-date-input block h-14 w-full min-w-0 max-w-full border-0 bg-transparent px-4 font-semibold text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]",
                 useTwoColumns ? "text-sm" : "text-[15px]",
@@ -108,7 +139,8 @@ export default function HeroBookingWidget() {
             <input
               type="date"
               value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
+              min={checkIn || today}
+              onChange={(e) => handleCheckOutChange(e.target.value)}
               className={cn(
                 "hero-booking-date-input block h-14 w-full min-w-0 max-w-full border-0 bg-transparent px-4 font-semibold text-[var(--ink-900)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]",
                 useTwoColumns ? "text-sm" : "text-[15px]",

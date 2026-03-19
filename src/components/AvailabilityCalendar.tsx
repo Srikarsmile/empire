@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { DateRange } from '@/data/vehicleMeta';
+import type { DateRange } from '@/lib/dateUtils';
+import { normalizeDate, dateToKey, keyToDate, addDays } from '@/lib/dateUtils';
 
 interface AvailabilityCalendarProps {
   bookedRanges: DateRange[];
@@ -12,36 +13,15 @@ interface AvailabilityCalendarProps {
   onInvalidSelection?: (message: string) => void;
 }
 
-function normalizeDate(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function formatDateKey(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function parseDateKey(value: string) {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
 function enumerateDays(from: string, to: string) {
-  const start = parseDateKey(from);
-  const end = parseDateKey(to);
+  const start = keyToDate(from);
+  const end = keyToDate(to);
   const keys: string[] = [];
   let cursor = normalizeDate(start);
   const endDate = normalizeDate(end);
 
   while (cursor <= endDate) {
-    keys.push(formatDateKey(cursor));
+    keys.push(dateToKey(cursor));
     cursor = addDays(cursor, 1);
   }
 
@@ -67,6 +47,7 @@ export default function AvailabilityCalendar({
   onInvalidSelection,
 }: AvailabilityCalendarProps) {
   const today = useMemo(() => normalizeDate(new Date()), []);
+  const todayKey = useMemo(() => dateToKey(today), [today]);
 
   const bookedSet = useMemo(() => {
     const set = new Set<string>();
@@ -95,7 +76,7 @@ export default function AvailabilityCalendar({
   };
 
   const handleDateClick = (date: Date) => {
-    const dateKey = formatDateKey(date);
+    const dateKey = dateToKey(date);
 
     if (date < today || bookedSet.has(dateKey)) return;
 
@@ -119,24 +100,48 @@ export default function AvailabilityCalendar({
     onCheckOutChange(dateKey);
   };
 
+  const hasDates = checkIn || checkOut;
+
   return (
     <div className="availability-calendar">
       <div className="calendar-head">
         <p>Pick your pickup and return dates</p>
-        <div className="calendar-legend">
-          <span><i /> Available</span>
-          <span><i className="booked" /> Unavailable</span>
-          <span><i className="selected" /> Selected</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div className="calendar-legend">
+            <span><i /> Available</span>
+            <span><i className="booked" /> Unavailable</span>
+            <span><i className="selected" /> Selected</span>
+          </div>
+          {hasDates && (
+            <button
+              type="button"
+              onClick={() => { onCheckInChange(''); onCheckOutChange(''); }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--accent)',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                padding: '0.2rem 0.4rem',
+                borderRadius: '0.4rem',
+                textDecoration: 'underline',
+                textUnderlineOffset: '2px',
+              }}
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
       <div className="calendar-months">
-        {monthStarts.map((monthDate) => {
+        {monthStarts.map((monthDate, index) => {
           const days = getMonthMatrix(monthDate);
           const monthLabel = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
           return (
-            <div key={monthLabel} className="calendar-month">
+            <div key={monthLabel} className={`calendar-month${index === 1 ? ' calendar-month--second' : ''}`}>
               <h4>{monthLabel}</h4>
               <div className="calendar-weekdays">
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
@@ -146,18 +151,26 @@ export default function AvailabilityCalendar({
 
               <div className="calendar-grid">
                 {days.map((day) => {
-                  const dayKey = formatDateKey(day);
+                  const dayKey = dateToKey(day);
                   const inMonth = day.getMonth() === monthDate.getMonth();
                   const isPast = day < today;
                   const isBooked = bookedSet.has(dayKey);
                   const isSelectedEdge = dayKey === checkIn || dayKey === checkOut;
                   const isInRange = inSelectedRange(dayKey);
+                  const isToday = dayKey === todayKey;
 
                   return (
                     <button
                       type="button"
                       key={dayKey}
-                      className={`calendar-day ${inMonth ? '' : 'outside'} ${isBooked ? 'booked' : ''} ${isInRange ? 'in-range' : ''} ${isSelectedEdge ? 'selected-edge' : ''}`}
+                      className={[
+                        'calendar-day',
+                        inMonth ? '' : 'outside',
+                        isBooked ? 'booked' : '',
+                        isInRange ? 'in-range' : '',
+                        isSelectedEdge ? 'selected-edge' : '',
+                        isToday ? 'today' : '',
+                      ].filter(Boolean).join(' ')}
                       disabled={!inMonth || isPast || isBooked}
                       onClick={() => handleDateClick(day)}
                     >

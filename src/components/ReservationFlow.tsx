@@ -2,10 +2,21 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import AvailabilityCalendar from '@/components/AvailabilityCalendar';
-import type { DateRange } from '@/data/vehicleMeta';
+import type { DateRange } from '@/lib/dateUtils';
+import {
+  normalizeDate,
+  dateToKey,
+  keyToDate,
+  addDays,
+  getStayNights,
+  getBookedSet,
+  formatDateShort,
+} from '@/lib/dateUtils';
+import Toast from '@/components/Toast';
 
 interface Vehicle {
   id: string;
@@ -25,64 +36,7 @@ interface FormData {
   phone: string;
 }
 
-function normalizeDate(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function dateToKey(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function keyToDate(value: string) {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function getBookedSet(bookedRanges: DateRange[]) {
-  const set = new Set<string>();
-
-  bookedRanges.forEach((range) => {
-    const start = keyToDate(range.start);
-    const end = keyToDate(range.end);
-    let cursor = normalizeDate(start);
-
-    while (cursor <= end) {
-      set.add(dateToKey(cursor));
-      cursor = addDays(cursor, 1);
-    }
-  });
-
-  return set;
-}
-
-function getStayNights(checkIn: string, checkOut: string) {
-  const nights: string[] = [];
-  let cursor = normalizeDate(keyToDate(checkIn));
-  const end = normalizeDate(keyToDate(checkOut));
-
-  while (cursor < end) {
-    nights.push(dateToKey(cursor));
-    cursor = addDays(cursor, 1);
-  }
-
-  return nights;
-}
+// Date utilities imported from @/lib/dateUtils
 
 function findFirstAvailableWindow(bookedRanges: DateRange[], minNights: number) {
   const bookedSet = getBookedSet(bookedRanges);
@@ -110,6 +64,7 @@ function findFirstAvailableWindow(bookedRanges: DateRange[], minNights: number) 
 type Airport = { id: string; name: string; city: string; fee: number };
 
 export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
+  const searchParams = useSearchParams();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -119,8 +74,8 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
     phone: '',
   });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') ?? '');
+  const [checkOut, setCheckOut] = useState(searchParams.get('checkOut') ?? '');
   const [dateSelectionNotice, setDateSelectionNotice] = useState('');
   const [airports, setAirports] = useState<Airport[]>([]);
   const [selectedAirportId, setSelectedAirportId] = useState<string>('');
@@ -129,30 +84,31 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const [airportEnabled, setAirportEnabled] = useState(true);
   const [insuranceEnabled, setInsuranceEnabled] = useState(false);
   const [insuranceFee, setInsuranceFee] = useState(0);
+  const [errorToast, setErrorToast] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/vehicles/${vehicleId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setVehicle(data);
-        const defaults = findFirstAvailableWindow(data.bookedRanges ?? [], data.minNights ?? 2);
-        setCheckIn(defaults.checkIn);
-        setCheckOut(defaults.checkOut);
+    Promise.all([
+      fetch(`/api/vehicles/${vehicleId}`).then((r) => r.json()),
+      fetch('/api/admin/airports').then((r) => r.json()).catch(() => []),
+      fetch('/api/admin/fees-config').then((r) => r.json()).catch(() => ({})),
+    ]).then(([vehicleData, airportsData, feesData]: [Vehicle, Airport[], Record<string, unknown>]) => {
+      setVehicle(vehicleData);
+      setCheckIn((prev) => {
+        if (prev) return prev;
+        return findFirstAvailableWindow(vehicleData.bookedRanges ?? [], vehicleData.minNights ?? 2).checkIn;
       });
-    fetch('/api/admin/airports')
-      .then((res) => res.json())
-      .then((data) => setAirports(Array.isArray(data) ? data : []))
-      .catch(() => {});
-    fetch('/api/admin/fees-config')
-      .then((res) => res.json())
-      .then((d) => {
-        if (typeof d.taxRate === 'number') setTaxRate(d.taxRate);
-        if (typeof d.taxEnabled === 'boolean') setTaxEnabled(d.taxEnabled);
-        if (typeof d.airportEnabled === 'boolean') setAirportEnabled(d.airportEnabled);
-        if (typeof d.insuranceEnabled === 'boolean') setInsuranceEnabled(d.insuranceEnabled);
-        if (typeof d.insuranceFee === 'number') setInsuranceFee(d.insuranceFee);
-      })
-      .catch(() => {});
+      setCheckOut((prev) => {
+        if (prev) return prev;
+        return findFirstAvailableWindow(vehicleData.bookedRanges ?? [], vehicleData.minNights ?? 2).checkOut;
+      });
+      if (Array.isArray(airportsData)) setAirports(airportsData);
+      if (typeof feesData.taxRate === 'number') setTaxRate(feesData.taxRate);
+      if (typeof feesData.taxEnabled === 'boolean') setTaxEnabled(feesData.taxEnabled);
+      if (typeof feesData.airportEnabled === 'boolean') setAirportEnabled(feesData.airportEnabled);
+      if (typeof feesData.insuranceEnabled === 'boolean') setInsuranceEnabled(feesData.insuranceEnabled);
+      if (typeof feesData.insuranceFee === 'number') setInsuranceFee(feesData.insuranceFee);
+    });
   }, [vehicleId]);
 
   const formErrors = useMemo(() => {
@@ -184,6 +140,9 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
     if (!vehicle || !checkIn || !checkOut) return 'Pick both pickup and return dates.';
     if (checkOut <= checkIn) return 'Return must be after pickup.';
     if (nights < vehicle.minNights) return `Minimum rental is ${vehicle.minNights} day${vehicle.minNights > 1 ? 's' : ''}.`;
+
+    const MAX_NIGHTS = 30;
+    if (nights > MAX_NIGHTS) return `Maximum rental is ${MAX_NIGHTS} days.`;
 
     const bookedSet = getBookedSet(vehicle.bookedRanges);
     const hasBookedConflict = getStayNights(checkIn, checkOut).some((day) => bookedSet.has(day));
@@ -232,11 +191,11 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
         const { url } = (await response.json()) as { url: string };
         window.location.href = url;
       } else {
-        alert('Could not start checkout. Please retry.');
+        setErrorToast('Could not start checkout. Please retry.');
         setIsSubmitting(false);
       }
     } catch {
-      alert('Rental request failed. Please retry.');
+      setErrorToast('Rental request failed. Please retry.');
       setIsSubmitting(false);
     }
   }, [checkIn, checkOut, dateError, formData, isFormValid, nights, vehicle, vehicleId]);
@@ -253,7 +212,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
     );
   }
 
-  const reservationBlocked = !isFormValid || Boolean(dateError);
+  const reservationBlocked = !isFormValid || Boolean(dateError) || !agreedToTerms;
 
   return (
     <>
@@ -340,10 +299,10 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
 
                 <div className="booking-date-summary">
                   <p>
-                    <strong>Pickup:</strong> {checkIn ? formatDate(checkIn) : 'Select a date'}
+                    <strong>Pickup:</strong> {checkIn ? formatDateShort(checkIn) : 'Select a date'}
                   </p>
                   <p>
-                    <strong>Return:</strong> {checkOut ? formatDate(checkOut) : 'Select a date'}
+                    <strong>Return:</strong> {checkOut ? formatDateShort(checkOut) : 'Select a date'}
                   </p>
                   <p>
                     <strong>Rental days:</strong> {nights || 0}
@@ -398,6 +357,20 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                   </div>
                 </div>
 
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    style={{ marginTop: '0.2rem', flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--ink-500)', lineHeight: '1.5' }}>
+                    I agree to the{' '}
+                    <Link href="/terms" style={{ color: 'inherit', textDecoration: 'underline' }}>Terms &amp; Conditions</Link>
+                    {' '}and{' '}
+                    <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>Privacy Policy</Link>.
+                  </span>
+                </label>
                 <button
                   className="btn-primary full-width"
                   onClick={confirmReservation}
@@ -412,6 +385,12 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
         </div>
       </div>
 
+      {errorToast && (
+        <Toast
+          message={errorToast}
+          onClose={() => setErrorToast('')}
+        />
+      )}
     </>
   );
 }

@@ -115,6 +115,7 @@ export default function CalendarPage() {
             <button onClick={() => { setLoading(true); setLoadAttempt((a) => a + 1); }} className="text-sm font-medium text-red-700 underline underline-offset-2 hover:text-red-900">Retry</button>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-7">
             {cells.map((day, idx) => {
               if (!day) {
@@ -158,6 +159,12 @@ export default function CalendarPage() {
               );
             })}
           </div>
+          {reservations.length === 0 && (
+            <div className="p-10 text-center text-sm text-gray-400">
+              No reservations yet. Calendar will populate once bookings are made.
+            </div>
+          )}
+          </>
         )}
 
         {/* Legend */}

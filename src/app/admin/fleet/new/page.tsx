@@ -13,6 +13,7 @@ export default function AddVehicle() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
+  const [imageBlurs, setImageBlurs] = useState<string[]>([]);
   const [airports, setAirports] = useState<Airport[]>([]);
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function AddVehicle() {
         location: form.location,
         amenities: form.amenities.split(',').map((a) => a.trim()).filter(Boolean),
         images,
+        imageBlurs,
       }),
     });
 
@@ -132,7 +134,14 @@ export default function AddVehicle() {
 
         {/* Images */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-          <ImageManager images={images} onChange={setImages} />
+          <ImageManager
+            images={images}
+            imageBlurs={imageBlurs}
+            onChange={({ images: imgs, imageBlurs: blurs }) => {
+              setImages(imgs);
+              setImageBlurs(blurs);
+            }}
+          />
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

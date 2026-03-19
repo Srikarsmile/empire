@@ -16,6 +16,7 @@ interface VehicleRecord {
   description: string;
   amenities: string[];
   images: string[];
+  imageBlurs: string[];
   location: string;
 }
 
@@ -26,6 +27,7 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
+  const [imageBlurs, setImageBlurs] = useState<string[]>([]);
   const [airports, setAirports] = useState<Airport[]>([]);
 
   const [form, setForm] = useState({
@@ -57,6 +59,7 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
           amenities: (v.amenities ?? []).join(', '),
         });
         setImages(v.images ?? []);
+        setImageBlurs(v.imageBlurs ?? []);
         setIsLoading(false);
       })
       .catch(() => {
@@ -85,6 +88,7 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
         location: form.location,
         amenities: form.amenities.split(',').map((a) => a.trim()).filter(Boolean),
         images,
+        imageBlurs,
       }),
     });
 
@@ -170,7 +174,14 @@ export default function EditVehicle({ params }: { params: Promise<{ id: string }
 
         {/* Images */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-          <ImageManager images={images} onChange={setImages} />
+          <ImageManager
+            images={images}
+            imageBlurs={imageBlurs}
+            onChange={({ images: imgs, imageBlurs: blurs }) => {
+              setImages(imgs);
+              setImageBlurs(blurs);
+            }}
+          />
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

@@ -198,7 +198,9 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
       const deltaTime = (time - lastTime) / 1000;
       lastTime = time;
 
-      updateSquares(gridParams.squares, deltaTime);
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        updateSquares(gridParams.squares, deltaTime);
+      }
       drawGrid(
         ctx,
         canvas.width,

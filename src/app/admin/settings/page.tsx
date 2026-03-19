@@ -264,13 +264,44 @@ function AccountTab() {
   const [adminEmail, setAdminEmail] = useState('');
   const [env, setEnv] = useState('');
   const [appUrl, setAppUrl] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneSaved, setPhoneSaved] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/settings-info')
       .then((r) => r.json())
-      .then((d) => { setAdminEmail(d.adminEmail); setEnv(d.env); setAppUrl(d.appUrl); })
+      .then((d) => {
+        setAdminEmail(d.adminEmail);
+        setEnv(d.env);
+        setAppUrl(d.appUrl);
+        setCompanyPhone(d.companyPhone ?? '');
+      })
       .catch(() => {});
   }, []);
+
+  const handleSavePhone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneSaving(true);
+    setPhoneSaved(false);
+    setPhoneError(false);
+    try {
+      const res = await fetch('/api/admin/settings-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyPhone }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      setPhoneSaved(true);
+      setTimeout(() => setPhoneSaved(false), 2000);
+    } catch {
+      setPhoneError(true);
+      setTimeout(() => setPhoneError(false), 3000);
+    } finally {
+      setPhoneSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-5 max-w-md">
@@ -288,6 +319,27 @@ function AccountTab() {
         <label className="block text-sm font-medium text-gray-700">App URL</label>
         <input type="text" disabled value={appUrl} className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-500 shadow-sm sm:text-sm" />
       </div>
+      <form onSubmit={handleSavePhone} className="space-y-2 pt-2 border-t border-gray-100">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Company Phone</label>
+          <input
+            type="text"
+            value={companyPhone}
+            onChange={(e) => setCompanyPhone(e.target.value)}
+            placeholder="+1 809 123 4567"
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
+          />
+          <p className="mt-1 text-xs text-gray-400">Shown in confirmation and reminder emails sent to customers.</p>
+        </div>
+        <button
+          type="submit"
+          disabled={phoneSaving}
+          className="flex items-center gap-1.5 bg-black text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
+        >
+          {phoneSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {phoneSaving ? 'Saving...' : phoneSaved ? 'Saved!' : phoneError ? 'Save failed — retry' : 'Save phone'}
+        </button>
+      </form>
     </div>
   );
 }

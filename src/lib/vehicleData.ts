@@ -9,6 +9,7 @@ export interface VehicleBase {
   description: string;
   amenities: string[];
   images: string[];
+  imageBlurs: string[];
   location: string;
 }
 
@@ -28,6 +29,7 @@ function toEnriched(v: {
   description: string;
   amenities: string[];
   images: string[];
+  imageBlurs: string[];
   location: string;
   rating: number;
   reviewCount: number;
@@ -46,6 +48,15 @@ export async function getAllVehicles(): Promise<EnrichedVehicle[]> {
   const vehicles = await prisma.vehicle.findMany({
     where: { paused: false },
     orderBy: { createdAt: 'asc' },
+  });
+  return vehicles.map(toEnriched);
+}
+
+export async function getFeaturedVehicles(limit = 5): Promise<EnrichedVehicle[]> {
+  const vehicles = await prisma.vehicle.findMany({
+    where: { paused: false },
+    orderBy: { createdAt: 'asc' },
+    take: limit,
   });
   return vehicles.map(toEnriched);
 }

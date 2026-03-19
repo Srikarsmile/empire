@@ -3,49 +3,138 @@
 import { useState } from 'react';
 import { X, Plus, Loader2 } from 'lucide-react';
 
-interface ImageManagerProps {
+export interface ImageManagerProps {
   images: string[];
-  onChange: (images: string[]) => void;
+  imageBlurs: string[];
+  onChange: (data: { images: string[]; imageBlurs: string[] }) => void;
 }
 
-export default function ImageManager({ images, onChange }: ImageManagerProps) {
-  const [uploading, setUploading] = useState(false);
+type UploadItem = {
+  id: string;
+  name: string;
+  status: 'compressing' | 'uploading' | 'done' | 'error';
+  preview?: string;
+};
+
+async function compressImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX = 1920;
+      let { width, height } = img;
+      if (width > MAX || height > MAX) {
+        if (width > height) {
+          height = Math.round((height * MAX) / width);
+          width = MAX;
+        } else {
+          width = Math.round((width * MAX) / height);
+          height = MAX;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+        'image/jpeg',
+        0.85,
+      );
+    };
+    img.onerror = reject;
+    img.src = objectUrl;
+  });
+}
+
+export default function ImageManager({ images, imageBlurs, onChange }: ImageManagerProps) {
+  const [queue, setQueue] = useState<UploadItem[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [urlInput, setUrlInput] = useState('');
 
-  async function uploadFile(file: File) {
-    setUploading(true);
-    const fd = new FormData();
-    fd.append('file', file);
-    try {
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
-      if (res.ok) {
-        const { url } = await res.json();
-        onChange([...images, url]);
+  async function processFiles(files: FileList | File[]) {
+    const fileArray = Array.from(files);
+
+    const items: UploadItem[] = fileArray.map((f) => ({
+      id: crypto.randomUUID(),
+      name: f.name,
+      status: 'compressing' as const,
+      preview: URL.createObjectURL(f),
+    }));
+    setQueue((prev) => [...prev, ...items]);
+
+    const newUrls: string[] = [];
+    const newBlurs: string[] = [];
+
+    for (let i = 0; i < fileArray.length; i++) {
+      const file = fileArray[i];
+      const item = items[i];
+
+      try {
+        const blob = await compressImage(file);
+        setQueue((prev) =>
+          prev.map((q) => (q.id === item.id ? { ...q, status: 'uploading' } : q)),
+        );
+
+        const fd = new FormData();
+        fd.append('file', blob, file.name);
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+
+        if (res.ok) {
+          const { url, blurDataURL } = await res.json();
+          newUrls.push(url);
+          newBlurs.push(blurDataURL ?? '');
+          setQueue((prev) =>
+            prev.map((q) => (q.id === item.id ? { ...q, status: 'done' } : q)),
+          );
+        } else {
+          setQueue((prev) =>
+            prev.map((q) => (q.id === item.id ? { ...q, status: 'error' } : q)),
+          );
+        }
+      } catch {
+        setQueue((prev) =>
+          prev.map((q) => (q.id === item.id ? { ...q, status: 'error' } : q)),
+        );
       }
-    } finally {
-      setUploading(false);
     }
+
+    if (newUrls.length > 0) {
+      onChange({ images: [...images, ...newUrls], imageBlurs: [...imageBlurs, ...newBlurs] });
+    }
+
+    setTimeout(() => {
+      setQueue((prev) => prev.filter((q) => q.status !== 'done'));
+    }, 1500);
   }
 
   function addUrl() {
     const trimmed = urlInput.trim();
     if (trimmed) {
-      onChange([...images, trimmed]);
+      onChange({ images: [...images, trimmed], imageBlurs: [...imageBlurs, ''] });
       setUrlInput('');
     }
   }
 
   function remove(idx: number) {
-    onChange(images.filter((_, i) => i !== idx));
+    onChange({
+      images: images.filter((_, i) => i !== idx),
+      imageBlurs: imageBlurs.filter((_, i) => i !== idx),
+    });
   }
 
   function move(idx: number, dir: -1 | 1) {
-    const next = [...images];
+    const nextImgs = [...images];
+    const nextBlurs = [...imageBlurs];
     const target = idx + dir;
-    if (target < 0 || target >= next.length) return;
-    [next[idx], next[target]] = [next[target], next[idx]];
-    onChange(next);
+    if (target < 0 || target >= nextImgs.length) return;
+    [nextImgs[idx], nextImgs[target]] = [nextImgs[target], nextImgs[idx]];
+    [nextBlurs[idx], nextBlurs[target]] = [nextBlurs[target], nextBlurs[idx]];
+    onChange({ images: nextImgs, imageBlurs: nextBlurs });
   }
+
+  const isUploading = queue.some((q) => q.status === 'compressing' || q.status === 'uploading');
 
   return (
     <div className="space-y-4">
@@ -92,16 +181,48 @@ export default function ImageManager({ images, onChange }: ImageManagerProps) {
         </div>
       )}
 
-      {/* Upload */}
-      <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors">
-        {uploading
+      {/* Upload queue status */}
+      {queue.length > 0 && (
+        <div className="space-y-1.5">
+          {queue.map((item) => (
+            <div key={item.id} className="flex items-center gap-2 text-sm text-gray-600">
+              {item.preview && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.preview} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+              )}
+              <span className="truncate flex-1">{item.name}</span>
+              {item.status === 'compressing' && <span className="text-xs text-gray-400 shrink-0">Compressing…</span>}
+              {item.status === 'uploading' && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400 shrink-0" />}
+              {item.status === 'done' && <span className="text-xs text-green-600 shrink-0">Done</span>}
+              {item.status === 'error' && <span className="text-xs text-red-500 shrink-0">Failed</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Upload drop zone */}
+      <label
+        className={`flex items-center gap-3 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+          isDragOver ? 'border-black bg-black/5' : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50'
+        }`}
+        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+        onDragEnter={(e) => { e.preventDefault(); setIsDragOver(true); }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragOver(false);
+          if (e.dataTransfer.files.length > 0) processFiles(e.dataTransfer.files);
+        }}
+      >
+        {isUploading
           ? <Loader2 className="w-4 h-4 animate-spin text-gray-400 shrink-0" />
           : <Plus className="w-4 h-4 text-gray-400 shrink-0" />}
-        <span className="text-sm text-gray-500">{uploading ? 'Uploading...' : 'Click to upload image'}</span>
-        <input type="file" accept="image/*" className="hidden" disabled={uploading}
+        <span className="text-sm text-gray-500">
+          {isUploading ? 'Uploading…' : 'Drop images here, or click to select'}
+        </span>
+        <input type="file" accept="image/*" multiple className="hidden" disabled={isUploading}
           onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) uploadFile(file);
+            if (e.target.files?.length) processFiles(e.target.files);
             e.target.value = '';
           }} />
       </label>

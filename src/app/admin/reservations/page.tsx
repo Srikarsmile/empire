@@ -21,9 +21,10 @@ interface Reservation {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  upcoming:  'bg-blue-100 text-blue-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
+  upcoming:         'bg-blue-100 text-blue-700',
+  completed:        'bg-green-100 text-green-700',
+  cancelled:        'bg-red-100 text-red-700',
+  payment_pending:  'bg-amber-100 text-amber-700',
 };
 
 const PAGE_SIZE = 20;
@@ -37,6 +38,7 @@ export default function ReservationsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast]       = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // Confirm dialog for cancelling a booking
   const [confirmCancel, setConfirmCancel] = useState<{ id: string; name: string } | null>(null);
@@ -45,6 +47,28 @@ export default function ReservationsPage() {
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  // Clear selection whenever the reservation list changes
+  useEffect(() => { setSelected(new Set()); }, [reservations]);
+
+  const allSelected = reservations.length > 0 && selected.size === reservations.length;
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(reservations.map((r) => r.id)));
+  const toggleOne = (id: string) => setSelected((prev) => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  const bulkUpdateStatus = async (status: string) => {
+    const ids = Array.from(selected);
+    await Promise.all(ids.map((id) => fetch(`/api/admin/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })));
+    setSelected(new Set());
+    loadPage(page, search, statusFilter);
+    showToast(`${ids.length} booking${ids.length !== 1 ? 's' : ''} marked as ${status}.`);
   };
 
   const loadPage = useCallback(async (p: number, q: string, st: string) => {
@@ -168,11 +192,25 @@ export default function ReservationsPage() {
           className="px-4 py-2 border border-gray-200 text-sm text-gray-700 font-medium rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-black/10"
         >
           <option value="">All statuses</option>
+          <option value="payment_pending">Payment Pending</option>
           <option value="upcoming">Upcoming</option>
           <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
         </select>
       </div>
+
+      {/* Bulk action toolbar */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 bg-gray-900 text-white px-5 py-3 rounded-xl text-sm font-medium">
+          <span>{selected.size} selected</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <button onClick={() => bulkUpdateStatus('upcoming')} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">Mark Upcoming</button>
+            <button onClick={() => bulkUpdateStatus('completed')} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">Mark Completed</button>
+            <button onClick={() => bulkUpdateStatus('cancelled')} className="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg transition-colors">Cancel</button>
+            <button onClick={() => setSelected(new Set())} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">Clear</button>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -187,6 +225,9 @@ export default function ReservationsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="w-10 pl-6 py-3">
+                    <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded border-gray-300 cursor-pointer" aria-label="Select all" />
+                  </th>
                   {['Guest', 'Email', 'Vehicle', 'Check-in', 'Check-out', 'Nights', 'Total', 'Status', 'Booked'].map((h) => (
                     <th key={h} className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
@@ -194,7 +235,10 @@ export default function ReservationsPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {reservations.map((r) => (
-                  <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={r.id} className={`hover:bg-gray-50 transition-colors ${selected.has(r.id) ? 'bg-blue-50/60' : ''}`}>
+                    <td className="pl-6 py-4">
+                      <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleOne(r.id)} className="rounded border-gray-300 cursor-pointer" aria-label={`Select ${r.firstName} ${r.lastName}`} />
+                    </td>
                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{r.firstName} {r.lastName}</td>
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{r.email}</td>
                     <td className="px-6 py-4 text-gray-600">{r.vehicleTitle}</td>
@@ -208,6 +252,7 @@ export default function ReservationsPage() {
                         onChange={(e) => handleStatusChange(r.id, r.firstName, r.lastName, e.target.value)}
                         className={`text-xs font-medium rounded-full px-2.5 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-black/10 ${STATUS_COLORS[r.status] ?? 'bg-gray-100 text-gray-700'}`}
                       >
+                        <option value="payment_pending">Payment Pending</option>
                         <option value="upcoming">Upcoming</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>

@@ -71,7 +71,7 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
           </div>
         </FadeInUp>
 
-        <GalleryLightbox images={vehicle.images} title={vehicle.title} />
+        <GalleryLightbox images={vehicle.images} imageBlurs={vehicle.imageBlurs} title={vehicle.title} />
 
         <div className="property-layout">
           <FadeInUp className="property-content">

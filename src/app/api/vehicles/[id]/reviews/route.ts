@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import type { ReviewItem } from '@/data/vehicleMeta';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { guestName, email, rating, comment } = await request.json();
+  const { guestName, rating, comment } = await request.json();
 
-  if (!guestName?.trim() || !email?.trim() || !comment?.trim() || !rating || rating < 1 || rating > 5) {
+  // Read email from auth cookie — never trust client-supplied email
+  const cookieStore = await cookies();
+  const cookieEmail = cookieStore.get('empire_email')?.value;
+  if (!cookieEmail) {
+    return NextResponse.json(
+      { error: 'You must be logged in to leave a review.' },
+      { status: 401 },
+    );
+  }
+  const normalizedEmail = cookieEmail.toLowerCase().trim();
+
+  if (!guestName?.trim() || !comment?.trim() || !rating || rating < 1 || rating > 5) {
     return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
   }
-
-  const normalizedEmail = String(email).toLowerCase().trim();
 
   // Check they have a completed reservation for this vehicle
   const reservation = await prisma.reservation.findFirst({

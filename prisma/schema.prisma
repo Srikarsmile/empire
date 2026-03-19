@@ -29,6 +29,11 @@ model Reservation {
   airportFee      Int      @default(0)
   dropoffLocation String   @default("")
   insuranceFee    Int      @default(0)
+
+  @@index([status])
+  @@index([vehicleId])
+  @@index([email])
+  @@index([createdAt])
 }
 
 model Vehicle {
@@ -39,6 +44,7 @@ model Vehicle {
   description  String
   amenities    String[]
   images       String[]
+  imageBlurs   String[]  @default([])
   location     String
   rating       Float    @default(4.7)
   reviewCount  Int      @default(0)
@@ -47,6 +53,9 @@ model Vehicle {
   reviews      Json     @default("[]")
   paused       Boolean  @default(false)
   createdAt    DateTime @default(now())
+
+  @@index([paused])
+  @@index([createdAt])
 }
 
 model SiteContent {
@@ -61,4 +70,8 @@ model OtpCode {
   code      String
   expiresAt DateTime
   createdAt DateTime @default(now())
+  attempts  Int      @default(0)
+
+  @@index([email])
+  @@index([expiresAt])
 }

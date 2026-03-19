@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Copy, Check } from 'lucide-react';
 
 interface ReservationRecord {
   id: string;
@@ -35,6 +35,14 @@ function SuccessContent() {
   const sessionId = searchParams.get('session_id');
   const [reservation, setReservation] = useState<ReservationRecord | null>(null);
   const [error, setError] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyBookingRef = (id: string) => {
+    navigator.clipboard.writeText(id).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     if (!sessionId) {
@@ -85,8 +93,16 @@ function SuccessContent() {
             style={{ width: '2.8rem', height: '2.8rem', margin: '0 auto 1rem', color: 'var(--accent)' }}
           />
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>Rental confirmed</h1>
-          <p className="muted-label" style={{ marginBottom: '1.75rem' }}>
+          <p className="muted-label" style={{ marginBottom: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             Booking #{reservation.id}
+            <button
+              onClick={() => copyBookingRef(reservation.id)}
+              title="Copy booking reference"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.15rem', color: copied ? 'var(--success)' : 'var(--ink-500)', display: 'inline-flex', alignItems: 'center' }}
+            >
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+            </button>
+            {copied && <span style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: 600 }}>Copied!</span>}
           </p>
 
           <div style={{ textAlign: 'left' }}>

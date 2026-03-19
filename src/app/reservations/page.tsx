@@ -4,19 +4,42 @@ import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
+import { CreditCard } from 'lucide-react';
+
+type ReservationStatus = 'upcoming' | 'completed' | 'payment_pending' | 'cancelled';
 
 interface Reservation {
   id: string;
   vehicleId: string;
   vehicleTitle: string;
   vehicleImage: string;
-  status: 'upcoming' | 'completed';
+  status: ReservationStatus;
   checkIn?: string;
   checkOut?: string;
   nights?: number;
   total?: number;
   price: number;
+  stripeSessionId?: string | null;
 }
+
+/** Convert CUID to human-readable ref: EC-XXXXXX */
+function toRef(id: string): string {
+  return `EC-${id.slice(-6).toUpperCase()}`;
+}
+
+/** Format ISO date string to readable format: Mar 20, 2026 */
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/** Status display config */
+const STATUS_CONFIG: Record<ReservationStatus, { label: string; className: string }> = {
+  upcoming: { label: 'Confirmed', className: 'confirmed' },
+  payment_pending: { label: 'Awaiting Payment', className: 'payment-pending' },
+  completed: { label: 'Completed', className: 'completed-status' },
+  cancelled: { label: 'Cancelled', className: 'cancelled' },
+};
 
 export default function ReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -44,26 +67,24 @@ export default function ReservationsPage() {
   };
 
   useEffect(() => {
-    // Initial fetch — isLoading is already true from the initializer,
-    // so we skip synchronous setState and go straight to the async fetch.
-    fetch('/api/reservations')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load reservations');
-        return res.json();
-      })
-      .then((data) => {
-        setReservations(data);
-        setIsLoading(false);
-      })
-      .catch((err: Error) => {
-        setError(err.message);
-        setIsLoading(false);
-      });
+    fetchReservations();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredReservations = useMemo(
-    () => reservations.filter((reservation) => reservation.status === activeTab),
-    [activeTab, reservations],
+  const filteredReservations = useMemo(() => {
+    if (activeTab === 'upcoming') {
+      // Show both confirmed (upcoming) and payment_pending under the Upcoming tab
+      return reservations.filter(
+        (r) => r.status === 'upcoming' || r.status === 'payment_pending',
+      );
+    }
+    return reservations.filter((r) => r.status === 'completed');
+  }, [activeTab, reservations]);
+
+  // Count payment_pending to show a badge on the Upcoming tab
+  const pendingCount = useMemo(
+    () => reservations.filter((r) => r.status === 'payment_pending').length,
+    [reservations],
   );
 
   return (
@@ -84,7 +105,10 @@ export default function ReservationsPage() {
               aria-selected={activeTab === tab}
               aria-controls={`panel-${tab}`}
             >
-              {tab[0].toUpperCase() + tab.slice(1)}
+              {tab === 'upcoming' ? 'Upcoming' : 'Completed'}
+              {tab === 'upcoming' && pendingCount > 0 && (
+                <span className="tab-badge">{pendingCount}</span>
+              )}
             </button>
           ))}
         </div>
@@ -133,38 +157,64 @@ export default function ReservationsPage() {
                   ) : null}
                 </div>
               ) : (
-                filteredReservations.map((reservation, index) => (
-                  <motion.article
-                    className="booking-item"
-                    key={reservation.id}
-                    initial={{ opacity: 0, x: -14 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.08 }}
-                  >
-                    <Image src={reservation.vehicleImage || '/icon.png'} alt={reservation.vehicleTitle} width={160} height={110} />
-                    <div className="booking-item-content">
-                      <span className={`status-pill ${reservation.status}`}>{reservation.status}</span>
-                      <h3>{reservation.vehicleTitle}</h3>
-                      <p>
-                        {reservation.checkIn && reservation.checkOut
-                          ? `${reservation.checkIn} to ${reservation.checkOut}`
-                          : 'Pickup and return dates will be finalized soon'}
-                      </p>
-                      <small>Reservation ref: {reservation.id}</small>
-                    </div>
-                    <div className="booking-item-side">
-                      <strong>${reservation.total ?? Math.round(reservation.price * 4 * 1.14)}</strong>
-                      <Link href={`/fleet/${reservation.vehicleId}`} className="btn-outline">
-                        View vehicle
-                      </Link>
-                      {reservation.status === 'completed' && (
-                        <Link href={`/fleet/${reservation.vehicleId}#reviews`} className="btn-primary" style={{ fontSize: '0.8rem', textAlign: 'center' }}>
-                          Leave a review
-                        </Link>
-                      )}
-                    </div>
-                  </motion.article>
-                ))
+                filteredReservations.map((reservation, index) => {
+                  const statusConfig = STATUS_CONFIG[reservation.status] ?? STATUS_CONFIG.upcoming;
+                  const isPending = reservation.status === 'payment_pending';
+
+                  return (
+                    <motion.article
+                      className={`booking-item ${isPending ? 'booking-item--pending' : ''}`}
+                      key={reservation.id}
+                      initial={{ opacity: 0, x: -14 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.08 }}
+                    >
+                      <Image
+                        src={reservation.vehicleImage || '/icon.png'}
+                        alt={reservation.vehicleTitle}
+                        width={160}
+                        height={110}
+                      />
+                      <div className="booking-item-content">
+                        <span className={`status-pill ${statusConfig.className}`}>
+                          {statusConfig.label}
+                        </span>
+                        <h3>{reservation.vehicleTitle}</h3>
+                        <p>
+                          {reservation.checkIn && reservation.checkOut
+                            ? `${formatDate(reservation.checkIn)} → ${formatDate(reservation.checkOut)}`
+                            : 'Pickup and return dates will be finalized soon'}
+                        </p>
+                        <small>Ref: {toRef(reservation.id)}</small>
+                      </div>
+                      <div className="booking-item-side">
+                        <strong>${reservation.total ?? Math.round(reservation.price * 4 * 1.14)}</strong>
+                        {isPending ? (
+                          <a
+                            href={`/api/reservations/pay?id=${reservation.id}`}
+                            className="btn-primary pay-now-btn"
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            Pay Now
+                          </a>
+                        ) : (
+                          <Link href={`/fleet/${reservation.vehicleId}`} className="btn-outline">
+                            View vehicle
+                          </Link>
+                        )}
+                        {reservation.status === 'completed' && (
+                          <Link
+                            href={`/fleet/${reservation.vehicleId}#reviews`}
+                            className="btn-primary"
+                            style={{ fontSize: '0.8rem', textAlign: 'center' }}
+                          >
+                            Leave a review
+                          </Link>
+                        )}
+                      </div>
+                    </motion.article>
+                  );
+                })
               )}
             </motion.div>
           </AnimatePresence>

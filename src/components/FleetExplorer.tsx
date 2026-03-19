@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AnimatedCard } from '@/components/animations/AnimatedCard';
 import { FadeInUp } from '@/components/animations/MotionWrapper';
 import { SlidersHorizontal, X as XIcon, Car, Search } from 'lucide-react';
-import type { DateRange } from '@/data/vehicleMeta';
+import type { DateRange } from '@/lib/dateUtils';
+import { keyToDate, addDays, dateToKey, getStayNights, getBookedSet } from '@/lib/dateUtils';
 
 interface Vehicle {
   id: string;
@@ -18,6 +19,7 @@ interface Vehicle {
   description: string;
   amenities: string[];
   images: string[];
+  imageBlurs?: string[];
   location: string;
   rating: number;
   reviewCount: number;
@@ -33,71 +35,34 @@ const SORT_OPTIONS = [
   { value: 'rating-desc', label: 'Top rated' },
 ];
 
-function keyToDate(value: string) {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
-function dateToKey(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function getStayNights(checkIn: string, checkOut: string) {
-  const nights: string[] = [];
-  let cursor = keyToDate(checkIn);
-  const end = keyToDate(checkOut);
-
-  while (cursor < end) {
-    nights.push(dateToKey(cursor));
-    cursor = addDays(cursor, 1);
-  }
-
-  return nights;
-}
-
-function getBookedSet(ranges: DateRange[]) {
-  const set = new Set<string>();
-
-  ranges.forEach((range) => {
-    let cursor = keyToDate(range.start);
-    const end = keyToDate(range.end);
-
-    while (cursor <= end) {
-      set.add(dateToKey(cursor));
-      cursor = addDays(cursor, 1);
-    }
-  });
-
-  return set;
-}
+// Date utilities imported from @/lib/dateUtils
 
 function FleetCard({
   vehicle,
   isFav,
   onToggleFavorite,
   index,
+  checkIn,
+  checkOut,
 }: {
   vehicle: Vehicle;
   isFav: boolean;
   onToggleFavorite: (id: string) => void;
   index: number;
+  checkIn: string;
+  checkOut: string;
 }) {
   const [imgLoaded, setImgLoaded] = useState(false);
+  const reserveHref = checkIn && checkOut
+    ? `/reserve/${vehicle.id}?checkIn=${checkIn}&checkOut=${checkOut}`
+    : `/reserve/${vehicle.id}`;
 
   return (
     <AnimatedCard
       className="group relative flex flex-col bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:border-[var(--accent)] transition-colors duration-200 overflow-hidden"
       index={index}
     >
-      <Link href={`/reserve/${vehicle.id}`} className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)] block">
+      <Link href={reserveHref} className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)] block">
         <span
           className={`skeleton absolute inset-0 z-10 transition-opacity duration-500 ${imgLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         />
@@ -108,6 +73,8 @@ function FleetCard({
           priority={index < 2}
           sizes="(max-width: 1100px) 100vw, (max-width: 1400px) 50vw, 33vw"
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          placeholder={vehicle.imageBlurs?.[0] ? 'blur' : 'empty'}
+          blurDataURL={vehicle.imageBlurs?.[0] || undefined}
           onLoad={() => setImgLoaded(true)}
         />
         <button
@@ -150,7 +117,7 @@ function FleetCard({
             <span className="text-[var(--ink-500)] font-medium text-sm ml-1">/ day</span>
           </div>
           <Link
-            href={`/reserve/${vehicle.id}`}
+            href={reserveHref}
             className="inline-flex items-center justify-center h-10 px-6 text-sm font-bold text-white transition bg-[var(--accent)] rounded-xl hover:bg-[var(--accent-light)] active:bg-[var(--accent-strong)]"
           >
             Book
@@ -443,6 +410,8 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
                       isFav={favorites.includes(vehicle.id)}
                       onToggleFavorite={toggleFavorite}
                       index={index}
+                      checkIn={checkIn}
+                      checkOut={checkOut}
                     />
                   ))}
                 </motion.div>

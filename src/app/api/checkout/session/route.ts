@@ -4,10 +4,26 @@ import { getVehicleById } from '@/lib/vehicleData';
 import { prisma } from '@/lib/prisma';
 import { getBookedSet, getStayNights } from '@/lib/dateUtils';
 
-async function getTaxRate(): Promise<number> {
+interface SiteFees {
+  taxRate: number;
+  taxEnabled: boolean;
+  airportEnabled: boolean;
+  insuranceEnabled: boolean;
+  insuranceFee: number;
+  airports: { id: string; name: string; city: string; fee: number }[];
+}
+
+async function getSiteFees(): Promise<SiteFees> {
   const content = await prisma.siteContent.findUnique({ where: { id: 'main' } });
   const data = (content?.data ?? {}) as Record<string, unknown>;
-  return typeof data.taxRate === 'number' ? data.taxRate : 14;
+  return {
+    taxRate: typeof data.taxRate === 'number' ? data.taxRate : 14,
+    taxEnabled: data.taxEnabled !== false,
+    airportEnabled: data.airportEnabled !== false,
+    insuranceEnabled: data.insuranceEnabled === true,
+    insuranceFee: typeof data.insuranceFee === 'number' ? data.insuranceFee : 0,
+    airports: (data.airports as SiteFees['airports']) ?? [],
+  };
 }
 
 export async function POST(request: Request) {
@@ -42,13 +58,24 @@ export async function POST(request: Request) {
       );
     }
 
-    const nights = Number(body.nights);
-    const airportFee = Number(body.airportFee ?? 0);
+    const fees = await getSiteFees();
+    const nights = requestedNights.length; // derived from checkIn/checkOut, not client-supplied
     const dropoffLocation = body.dropoffLocation ?? '';
-    const insuranceFee = Number(body.insuranceFee ?? 0);
-    const taxRate = await getTaxRate();
+
+    // Compute airport fee server-side by matching dropoffLocation against DB config
+    let airportFee = 0;
+    if (fees.airportEnabled && dropoffLocation) {
+      const match = fees.airports.find(
+        (a) => `${a.name}, ${a.city}` === dropoffLocation,
+      );
+      airportFee = match?.fee ?? 0;
+    }
+
+    // Compute insurance fee server-side
+    const insuranceFee = fees.insuranceEnabled && body.insuranceFee ? fees.insuranceFee : 0;
+
     const subtotal = vehicle.price * nights;
-    const taxes = Math.round(subtotal * (taxRate / 100));
+    const taxes = fees.taxEnabled ? Math.round(subtotal * (fees.taxRate / 100)) : 0;
     const total = subtotal + taxes + airportFee + insuranceFee;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 

@@ -3,16 +3,13 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { findBySessionId, addReservation } from '@/lib/reservationStore';
 import { prisma } from '@/lib/prisma';
-import type { DateRange } from '@/data/vehicleMeta';
+import type { DateRange } from '@/lib/dateUtils';
+import { buildConfirmationEmail } from '@/lib/emailTemplates';
 
 export const runtime = 'nodejs';
 
 function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  return new Date(value).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 export async function POST(request: Request) {
@@ -48,6 +45,54 @@ export async function POST(request: Request) {
     // Dedup — confirm route may have already created it
     const existing = await findBySessionId(session.id);
     if (existing) {
+      // If this was a payment_pending manual booking, upgrade it now
+      if (existing.status === 'payment_pending') {
+        await prisma.reservation.update({ where: { id: existing.id }, data: { status: 'upcoming' } });
+        const veh = await prisma.vehicle.findUnique({ where: { id: existing.vehicleId } });
+        if (veh) {
+          const ranges = (veh.bookedRanges as unknown as DateRange[]) ?? [];
+          await prisma.vehicle.update({
+            where: { id: existing.vehicleId },
+            data: { bookedRanges: JSON.parse(JSON.stringify([...ranges, { start: existing.checkIn, end: existing.checkOut }])) },
+          });
+        }
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://empirerentcar.com';
+        const sc = await prisma.siteContent.findFirst();
+        const scData = (sc?.data as Record<string, unknown>) ?? {};
+        const adminPhone = (scData.companyPhone as string) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
+        const bookingRef = existing.id.slice(-8).toUpperCase();
+        const { subject, html: confirmHtml } = buildConfirmationEmail({
+          firstName: existing.firstName,
+          lastName: existing.lastName,
+          email: existing.email,
+          phone: existing.phone,
+          vehicleTitle: existing.vehicleTitle,
+          vehicleImage: existing.vehicleImage,
+          checkIn: existing.checkIn,
+          checkOut: existing.checkOut,
+          nights: existing.nights,
+          subtotal: existing.subtotal,
+          taxes: existing.taxes,
+          airportFee: existing.airportFee,
+          insuranceFee: existing.insuranceFee,
+          dropoffLocation: existing.dropoffLocation,
+          total: existing.total,
+          bookingRef,
+          appUrl,
+          adminPhone,
+        });
+        try {
+          await resend.emails.send({
+            from: 'Empire Cars <noreply@empirerentcar.com>',
+            to: existing.email,
+            subject,
+            html: confirmHtml,
+          });
+        } catch (err) {
+          console.error('Webhook: failed to send confirmation for payment_pending upgrade:', err);
+        }
+        console.log('Webhook: payment_pending reservation confirmed', existing.id);
+      }
       return NextResponse.json({ received: true });
     }
 
@@ -89,67 +134,66 @@ export async function POST(request: Request) {
     const phone = process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null;
     const bookingRef = reservation.id.slice(-8).toUpperCase();
 
-    // Send confirmation email to customer
-    await resend.emails.send({
-      from: 'Empire Cars <noreply@empirerentcar.com>',
-      to: meta.email,
-      subject: `Booking confirmed — ${meta.vehicleTitle}`,
-      html: `
-        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#111;padding:24px">
-          <h2 style="margin-bottom:4px">Your rental is confirmed ✓</h2>
-          <p style="color:#555;margin-top:0">Hi ${meta.firstName}, here are your booking details.</p>
-          <p style="font-size:0.85em;color:#888;margin-top:-8px">Booking reference: <strong style="color:#111">#${bookingRef}</strong></p>
-
-          <table style="width:100%;border-collapse:collapse;margin:24px 0">
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;color:#555">Vehicle</td>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;font-weight:600">${meta.vehicleTitle}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;color:#555">Pickup</td>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;font-weight:600">${formatDate(meta.checkIn)}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;color:#555">Return</td>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;font-weight:600">${formatDate(meta.checkOut)}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;color:#555">Days</td>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;font-weight:600">${meta.nights}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;color:#555">Subtotal</td>
-              <td style="padding:10px 0;border-bottom:1px solid #eee">$${meta.subtotal}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid #eee;color:#555">Taxes</td>
-              <td style="padding:10px 0;border-bottom:1px solid #eee">$${meta.taxes}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;font-weight:700">Total paid</td>
-              <td style="padding:10px 0;font-weight:700;font-size:1.1em">$${meta.total}</td>
-            </tr>
-          </table>
-
-          <div style="background:#f9f9f9;border-radius:10px;padding:16px;margin-bottom:24px">
-            <p style="font-weight:600;margin:0 0 10px">What to bring at pickup</p>
-            <p style="margin:4px 0;color:#555;font-size:0.9em">🪪 &nbsp;Valid driving licence</p>
-            <p style="margin:4px 0;color:#555;font-size:0.9em">📘 &nbsp;Passport or national ID</p>
-            <p style="margin:4px 0;color:#555;font-size:0.9em">💳 &nbsp;Payment card used for booking</p>
-          </div>
-
-          <a href="${appUrl}/reservations" style="display:block;background:#111;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:600;margin-bottom:20px">
-            View my booking
-          </a>
-
-          <p style="color:#888;font-size:0.85em">
-            Our team will contact you 24 hours before pickup to confirm the exact location and time.
-            ${phone ? `Questions? Call or WhatsApp us at <a href="tel:${phone}" style="color:#111">${phone}</a>.` : 'Questions? Reply to this email.'}
-          </p>
-          <p style="color:#aaa;font-size:0.8em">— Empire Cars Sosua &nbsp;·&nbsp; <a href="${appUrl}" style="color:#aaa">${appUrl}</a></p>
-        </div>
-      `,
+    // Send professional confirmation email to customer
+    const { subject, html: confirmHtml } = buildConfirmationEmail({
+      firstName: meta.firstName,
+      lastName: meta.lastName,
+      email: meta.email,
+      phone: meta.phone,
+      vehicleTitle: meta.vehicleTitle,
+      vehicleImage: meta.vehicleImage,
+      checkIn: meta.checkIn,
+      checkOut: meta.checkOut,
+      nights: meta.nights,
+      subtotal: meta.subtotal,
+      taxes: meta.taxes,
+      airportFee: meta.airportFee,
+      insuranceFee: meta.insuranceFee,
+      dropoffLocation: meta.dropoffLocation,
+      total: meta.total,
+      bookingRef,
+      appUrl,
+      adminPhone: phone,
     });
+
+    try {
+      await resend.emails.send({
+        from: 'Empire Cars <noreply@empirerentcar.com>',
+        to: meta.email,
+        subject,
+        html: confirmHtml,
+      });
+    } catch (err) {
+      console.error('Failed to send customer confirmation email:', err);
+    }
+
+    // Send notification email to admin(s)
+    const adminEmails = String(process.env.ADMIN_EMAIL ?? '').split(',').map((e) => e.trim()).filter(Boolean);
+    if (adminEmails.length > 0) {
+      try {
+        await resend.emails.send({
+          from: 'Empire Cars <noreply@empirerentcar.com>',
+          to: adminEmails,
+          subject: `New booking — ${meta.vehicleTitle} ($${meta.total})`,
+          text: [
+            `New reservation #${bookingRef}`,
+            ``,
+            `Guest: ${meta.firstName} ${meta.lastName}`,
+            `Email: ${meta.email}`,
+            `Phone: ${meta.phone}`,
+            `Vehicle: ${meta.vehicleTitle}`,
+            `Pickup: ${formatDate(meta.checkIn)}`,
+            `Return: ${formatDate(meta.checkOut)}`,
+            `Days: ${meta.nights}`,
+            `Total: $${meta.total}`,
+            ``,
+            `View in admin: ${appUrl}/admin/reservations`,
+          ].join('\n'),
+        });
+      } catch (err) {
+        console.error('Failed to send admin notification email:', err);
+      }
+    }
 
     console.log('Webhook: reservation created', reservation.id);
   }

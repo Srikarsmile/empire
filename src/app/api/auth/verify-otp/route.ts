@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { prisma } from '@/lib/prisma';
+
+function hashOtp(code: string) {
+  return createHash('sha256').update(code).digest('hex');
+}
 
 export async function POST(request: Request) {
   const { email, code } = await request.json();
@@ -13,7 +18,24 @@ export async function POST(request: Request) {
     },
   });
 
-  if (!record || record.code !== String(code)) {
+  if (!record) {
+    return NextResponse.json({ error: 'Invalid or expired code' }, { status: 400 });
+  }
+
+  // Brute-force protection: allow at most 5 attempts per code
+  if (record.attempts >= 5) {
+    await prisma.otpCode.delete({ where: { id: record.id } });
+    return NextResponse.json(
+      { error: 'Too many failed attempts. Please request a new code.' },
+      { status: 429 },
+    );
+  }
+
+  if (record.code !== hashOtp(String(code))) {
+    await prisma.otpCode.update({
+      where: { id: record.id },
+      data: { attempts: { increment: 1 } },
+    });
     return NextResponse.json({ error: 'Invalid or expired code' }, { status: 400 });
   }
 

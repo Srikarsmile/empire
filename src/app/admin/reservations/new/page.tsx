@@ -24,7 +24,7 @@ export default function ManualBookingPage() {
   const [formError, setFormError] = useState('');
   const [form, setForm] = useState({
     vehicleId: '', firstName: '', lastName: '', email: '', phone: '',
-    checkIn: '', checkOut: '', status: 'upcoming', dropoffLocation: '',
+    checkIn: '', checkOut: '', status: 'payment_pending', dropoffLocation: '',
   });
 
   useEffect(() => {
@@ -143,11 +143,17 @@ export default function ManualBookingPage() {
           <span className="text-sm font-medium text-gray-700">Status</span>
           <select value={form.status} onChange={(e) => set('status', e.target.value)}
             className="mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-            <option value="upcoming">Upcoming</option>
+            <option value="payment_pending">Send payment request to customer</option>
+            <option value="upcoming">Upcoming (already paid / cash)</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
         </label>
+        {form.status === 'payment_pending' && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
+            A Stripe payment link will be emailed to the customer. Dates are not blocked until they pay.
+          </p>
+        )}
 
         <label className="block">
           <span className="text-sm font-medium text-gray-700">Airport Drop-off (optional)</span>
@@ -183,7 +189,9 @@ export default function ManualBookingPage() {
 
         <button type="submit" disabled={saving || nights < 1 || !vehicle || dateConflict}
           className="w-full py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 disabled:opacity-50 transition text-sm">
-          {saving ? 'Creating...' : 'Create booking'}
+          {saving
+            ? (form.status === 'payment_pending' ? 'Sending payment link...' : 'Creating...')
+            : (form.status === 'payment_pending' ? 'Create & send payment link' : 'Create booking')}
         </button>
       </form>
     </div>

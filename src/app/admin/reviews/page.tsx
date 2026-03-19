@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Star, Trash2 } from 'lucide-react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Review {
   id: string;
@@ -18,6 +19,7 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [confirmTarget, setConfirmTarget] = useState<{ vehicleId: string; reviewId: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/reviews')
@@ -26,8 +28,10 @@ export default function ReviewsPage() {
       .catch(() => { setLoadError(true); setLoading(false); });
   }, [loadAttempt]);
 
-  async function deleteReview(vehicleId: string, reviewId: string) {
-    if (!confirm('Delete this review?')) return;
+  async function handleDeleteConfirm() {
+    if (!confirmTarget) return;
+    const { vehicleId, reviewId } = confirmTarget;
+    setConfirmTarget(null);
     const res = await fetch('/api/admin/reviews', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -35,13 +39,20 @@ export default function ReviewsPage() {
     });
     if (res.ok) {
       setReviews((prev) => prev.filter((r) => r.id !== reviewId));
-    } else {
-      alert('Failed to delete review. Please try again.');
     }
   }
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog
+        isOpen={!!confirmTarget}
+        title="Delete review"
+        message="This review will be permanently removed and cannot be recovered."
+        confirmLabel="Delete"
+        danger
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setConfirmTarget(null)}
+      />
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Reviews</h1>
         <p className="mt-1 text-sm text-gray-500">All customer reviews across your fleet.</p>
@@ -76,7 +87,7 @@ export default function ReviewsPage() {
                   <p className="text-sm text-gray-600 leading-relaxed">{r.comment}</p>
                 </div>
                 <button
-                  onClick={() => deleteReview(r.vehicleId, r.id)}
+                  onClick={() => setConfirmTarget({ vehicleId: r.vehicleId, reviewId: r.id })}
                   className="shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   title="Delete review"
                 >

@@ -1,5 +1,5 @@
 import FleetExplorer from '@/components/FleetExplorer';
-import { getAllVehicles } from '@/lib/vehicleData';
+import { getAllVehicles, getFeaturedVehicles } from '@/lib/vehicleData';
 import { Plane, BadgeDollarSign, CarFront } from 'lucide-react';
 import { CardStackItem } from '@/components/ui/card-stack';
 import HeroCardStack from '@/components/HeroCardStack';
@@ -7,12 +7,16 @@ import HeroBookingWidget from '@/components/HeroBookingWidget';
 import { Suspense } from 'react';
 import { getSiteContent } from '@/lib/siteContent';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // ISR: revalidate every 60 seconds
 
 export default async function Home() {
-  const [vehicles, siteContent] = await Promise.all([getAllVehicles(), getSiteContent()]);
+  const [vehicles, featuredVehicles, siteContent] = await Promise.all([
+    getAllVehicles(),
+    getFeaturedVehicles(5),
+    getSiteContent(),
+  ]);
 
-  const cardStackItems: CardStackItem[] = vehicles.slice(0, 5).map(v => ({
+  const cardStackItems: CardStackItem[] = featuredVehicles.map(v => ({
     id: v.id,
     title: v.title,
     description: v.description,
@@ -92,7 +96,15 @@ export default async function Home() {
             {siteContent.fleet.description}
           </p>
         </div>
-        <Suspense>
+        <Suspense fallback={
+          <div className="shell">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="skeleton" style={{ height: '22rem', borderRadius: '1.2rem' }} />
+              ))}
+            </div>
+          </div>
+        }>
           <FleetExplorer vehicles={vehicles} />
         </Suspense>
       </div>
@@ -107,7 +119,7 @@ export default async function Home() {
             "name": "Empire Cars Sosua",
             "description": "Premium car rentals in Sosua and Puerto Plata. Straightforward pricing, airport delivery, and a well-maintained fleet.",
             "url": "https://empirecarsosua.com",
-            "telephone": "+1-809-000-0000",
+            "telephone": "+1-849-670-1234",
             "address": {
               "@type": "PostalAddress",
               "addressLocality": "Sosua",

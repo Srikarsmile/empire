@@ -25,20 +25,23 @@ export type ReservationRecord = {
 };
 
 export async function getAllReservations(): Promise<ReservationRecord[]> {
-  return prisma.reservation.findMany({ orderBy: { createdAt: 'desc' } });
+  const rows = await prisma.reservation.findMany({ orderBy: { createdAt: 'desc' } });
+  return rows as unknown as ReservationRecord[];
 }
 
 export async function findBySessionId(sessionId: string): Promise<ReservationRecord | null> {
-  return prisma.reservation.findUnique({ where: { stripeSessionId: sessionId } });
+  const row = await prisma.reservation.findUnique({ where: { stripeSessionId: sessionId } });
+  return row as unknown as ReservationRecord | null;
 }
 
 export async function addReservation(
   data: Omit<ReservationRecord, 'id' | 'status' | 'createdAt'>
 ): Promise<ReservationRecord> {
-  return prisma.reservation.create({
+  const row = await prisma.reservation.create({
     data: {
       ...data,
       stripeSessionId: data.stripeSessionId ?? null,
     },
   });
+  return row as unknown as ReservationRecord;
 }

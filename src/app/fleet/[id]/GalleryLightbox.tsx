@@ -7,10 +7,11 @@ import { X, ChevronLeft, ChevronRight, Grid2x2 } from 'lucide-react';
 
 interface GalleryLightboxProps {
   images: string[];
+  imageBlurs?: string[];
   title: string;
 }
 
-export default function GalleryLightbox({ images, title }: GalleryLightboxProps) {
+export default function GalleryLightbox({ images, imageBlurs, title }: GalleryLightboxProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const isOpen = openIndex !== null;
   const touchStartX = useRef<number | null>(null);
@@ -56,17 +57,29 @@ export default function GalleryLightbox({ images, title }: GalleryLightboxProps)
   return (
     <>
       <div className="gallery-grid">
-        <div className="gallery-main" onClick={() => setOpenIndex(0)}>
-          <Image src={images[0]} alt={title} fill priority sizes="(max-width: 900px) 100vw, 60vw" />
-          <button
-            className="gallery-show-all"
-            onClick={(e) => { e.stopPropagation(); setOpenIndex(0); }}
-            aria-label="Show all photos"
-          >
-            <Grid2x2 className="w-4 h-4" />
-            Show all {images.length} photos
-          </button>
-        </div>
+        {images.length > 0 ? (
+          <div className="gallery-main" onClick={() => setOpenIndex(0)}>
+            <Image
+              src={images[0]}
+              alt={title}
+              fill
+              priority
+              sizes="(max-width: 900px) 100vw, 60vw"
+              placeholder={imageBlurs?.[0] ? 'blur' : 'empty'}
+              blurDataURL={imageBlurs?.[0] || undefined}
+            />
+            <button
+              className="gallery-show-all"
+              onClick={(e) => { e.stopPropagation(); setOpenIndex(0); }}
+              aria-label="Show all photos"
+            >
+              <Grid2x2 className="w-4 h-4" />
+              Show all {images.length} photos
+            </button>
+          </div>
+        ) : (
+          <div className="gallery-main gallery-placeholder" />
+        )}
         {images.slice(1, 5).map((image, index) => (
           <div key={image} className="gallery-thumb" onClick={() => setOpenIndex(index + 1)}>
             <Image
@@ -74,6 +87,8 @@ export default function GalleryLightbox({ images, title }: GalleryLightboxProps)
               alt={`${title} view ${index + 2}`}
               fill
               sizes="(max-width: 900px) 50vw, 20vw"
+              placeholder={imageBlurs?.[index + 1] ? 'blur' : 'empty'}
+              blurDataURL={imageBlurs?.[index + 1] || undefined}
             />
           </div>
         ))}
@@ -116,6 +131,8 @@ export default function GalleryLightbox({ images, title }: GalleryLightboxProps)
                       sizes="(max-width: 700px) 100vw, 90vw"
                       className="object-contain"
                       priority
+                      placeholder={imageBlurs?.[openIndex] ? 'blur' : 'empty'}
+                      blurDataURL={imageBlurs?.[openIndex] || undefined}
                     />
                   )}
                 </motion.div>

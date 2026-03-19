@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter, Caveat } from 'next/font/google';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { AuthProvider } from '@/lib/AuthContext';
@@ -6,6 +7,20 @@ import LoginModal from '@/components/auth/LoginModal';
 import PageTransition from '@/components/PageTransition';
 import { getSiteContent } from '@/lib/siteContent';
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const caveat = Caveat({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-caveat',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -22,6 +37,7 @@ export const metadata: Metadata = {
   keywords: 'sosua car rental, puerto plata car rental, dominican republic rent a car, cabarete car rental',
   icons: {
     icon: [
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
       { url: '/icon.png', type: 'image/png' },
     ],
     apple: [{ url: '/icon.png', type: 'image/png' }],
@@ -60,15 +76,8 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
-      </head>
-      <body className="bg-white text-[#1C2B3A] antialiased" suppressHydrationWarning>
+      <head />
+      <body className={`${inter.variable} ${caveat.variable} bg-white text-[#1C2B3A] antialiased`} suppressHydrationWarning>
         <a href="#app-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:text-black focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:font-bold focus:text-sm">
           Skip to main content
         </a>

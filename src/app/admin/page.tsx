@@ -4,34 +4,45 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
-  const [totalReservations, upcomingCount, revenueAgg, recent, allReservations] = await Promise.all([
+  const [totalReservations, upcomingCount, revenueAgg, recent] = await Promise.all([
     prisma.reservation.count(),
     prisma.reservation.count({ where: { status: 'upcoming' } }),
     prisma.reservation.aggregate({ _sum: { total: true }, where: { status: { not: 'cancelled' } } }),
     prisma.reservation.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }),
-    prisma.reservation.findMany({ select: { total: true, createdAt: true, vehicleTitle: true, status: true } }),
   ]);
+
+  // Monthly revenue — last 6 months (using server-side filtering per month)
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const monthlyReservations = await prisma.reservation.findMany({
+    where: { status: { not: 'cancelled' }, createdAt: { gte: sixMonthsAgo } },
+    select: { total: true, createdAt: true },
+  });
+
+  // Top vehicles — aggregate from non-cancelled reservations
+  const topVehicleData = await prisma.reservation.findMany({
+    where: { status: { not: 'cancelled' } },
+    select: { vehicleTitle: true, total: true },
+  });
 
   const totalRevenue = revenueAgg._sum.total ?? 0;
 
-  // Monthly revenue — last 6 months
-  const now = new Date();
+  // Monthly revenue — last 6 months (using pre-filtered DB query)
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
     const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
     const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
     const label = d.toLocaleString('en-US', { month: 'short', year: '2-digit' });
-    const monthRes = allReservations.filter((r) => {
+    const monthRes = monthlyReservations.filter((r) => {
       const t = new Date(r.createdAt);
-      return t >= monthStart && t <= monthEnd && r.status !== 'cancelled';
+      return t >= monthStart && t <= monthEnd;
     });
     return { label, revenue: monthRes.reduce((s, r) => s + r.total, 0), count: monthRes.length };
   });
 
   // Top vehicles by revenue
   const vehicleMap: Record<string, { revenue: number; count: number }> = {};
-  for (const r of allReservations) {
-    if (r.status === 'cancelled') continue;
+  for (const r of topVehicleData) {
     if (!vehicleMap[r.vehicleTitle]) vehicleMap[r.vehicleTitle] = { revenue: 0, count: 0 };
     vehicleMap[r.vehicleTitle].revenue += r.total;
     vehicleMap[r.vehicleTitle].count += 1;

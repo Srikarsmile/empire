@@ -84,27 +84,38 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-0.5">
-            {NAV_LINKS.map((item, index) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="relative px-4 py-2 text-[13px] font-semibold tracking-wide uppercase text-[var(--ink-500)] transition-colors hover:text-[var(--ink-900)] rounded-lg"
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
-              >
-                {hoveredIndex === index && (
-                  <motion.div
-                    layoutId="nav-hover"
-                    className="absolute inset-0 -z-10 rounded-lg bg-[var(--accent-surface)]"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
-                  />
-                )}
-                {item.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((item, index) => {
+              const isActive = item.href.startsWith('/#')
+                ? pathname === '/'
+                : pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={cn(
+                    "relative px-4 py-2 text-[13px] tracking-wide uppercase rounded-lg transition-colors",
+                    isActive
+                      ? "nav-link--active"
+                      : "font-semibold text-[var(--ink-500)] hover:text-[var(--ink-900)]"
+                  )}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                  {hoveredIndex === index && !isActive && (
+                    <motion.div
+                      layoutId="nav-hover"
+                      className="absolute inset-0 -z-10 rounded-lg bg-[var(--accent-surface)]"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                    />
+                  )}
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Actions */}
@@ -175,22 +186,33 @@ export default function Header() {
           >
             <div className="rounded-2xl border border-[var(--border)] bg-[rgba(255,251,245,0.97)] p-4 shadow-xl backdrop-blur-xl overflow-hidden">
               <nav className="flex flex-col gap-1">
-                {NAV_LINKS.map((item, i) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, x: -15, filter: 'blur(4px)' }}
-                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                    transition={{ delay: i * 0.05, duration: 0.2 }}
-                  >
-                    <Link
-                      href={item.href}
-                      onClick={() => setMenuOpen(false)}
-                      className="block rounded-xl px-4 py-3.5 text-base font-semibold text-[var(--ink-900)] transition-colors hover:bg-[var(--accent-surface)]"
+                {NAV_LINKS.map((item, i) => {
+                  const isActive = item.href.startsWith('/#')
+                    ? pathname === '/'
+                    : pathname === item.href;
+                  return (
+                    <motion.div
+                      key={item.label}
+                      initial={{ opacity: 0, x: -15, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                      transition={{ delay: i * 0.05, duration: 0.2 }}
                     >
-                      {item.label}
-                    </Link>
-                  </motion.div>
-                ))}
+                      <Link
+                        href={item.href}
+                        aria-current={isActive ? 'page' : undefined}
+                        onClick={() => setMenuOpen(false)}
+                        className={cn(
+                          "block rounded-xl px-4 py-3.5 text-base font-semibold transition-colors",
+                          isActive
+                            ? "text-[var(--accent-strong)] bg-[var(--accent-surface)]"
+                            : "text-[var(--ink-900)] hover:bg-[var(--accent-surface)]"
+                        )}
+                      >
+                        {item.label}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
                 
                 {/* Mobile Auth Actions */}
                 <motion.div
