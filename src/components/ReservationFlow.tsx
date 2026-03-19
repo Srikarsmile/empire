@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Lock } from 'lucide-react';
 import AvailabilityCalendar from '@/components/AvailabilityCalendar';
 import type { DateRange } from '@/lib/dateUtils';
 import {
@@ -63,7 +63,7 @@ function findFirstAvailableWindow(bookedRanges: DateRange[], minNights: number) 
 
 type Airport = { id: string; name: string; city: string; fee: number };
 
-export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
+export default function ReservationFlow({ vehicleId, cancellationPolicy }: { vehicleId: string; cancellationPolicy?: string }) {
   const searchParams = useSearchParams();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,6 +84,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const [airportEnabled, setAirportEnabled] = useState(true);
   const [insuranceEnabled, setInsuranceEnabled] = useState(false);
   const [insuranceFee, setInsuranceFee] = useState(0);
+  const [wantsInsurance, setWantsInsurance] = useState(false);
   const [errorToast, setErrorToast] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -158,7 +159,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   const airportFee = selectedAirport?.fee ?? 0;
   const subtotal = (vehicle?.price ?? 0) * nights;
   const taxes = taxEnabled ? Math.round(subtotal * (taxRate / 100)) : 0;
-  const appliedInsuranceFee = insuranceEnabled ? insuranceFee : 0;
+  const appliedInsuranceFee = insuranceEnabled && wantsInsurance ? insuranceFee : 0;
   const total = subtotal + taxes + airportFee + appliedInsuranceFee;
 
   const markTouched = (field: keyof FormData) => {
@@ -166,6 +167,7 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
   };
 
   const confirmReservation = useCallback(async () => {
+    if (isSubmitting) return;
     setTouched({ firstName: true, lastName: true, email: true, phone: true });
     if (!isFormValid || !vehicle || dateError) return;
 
@@ -227,10 +229,18 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
             <p>Pickup and return dates below are live with unavailable days blocked.</p>
           </div>
 
+          <div className="booking-progress">
+            <span className={`step-dot ${dateError === '' ? 'done' : 'active'}`}>1</span>
+            <span className="step-line" />
+            <span className={`step-dot ${isFormValid && dateError === '' ? 'done' : isFormValid ? 'active' : ''}`}>2</span>
+            <span className="step-line" />
+            <span className="step-dot">3</span>
+          </div>
+
           <div className="booking-layout">
             <section className="booking-forms">
               <div className="info-card">
-                <h2>Driver details</h2>
+                <h2 id="driver-heading">Driver information</h2>
                 <div className="form-grid">
                   {([
                     ['firstName', 'First name', 'text', 'John'],
@@ -239,11 +249,12 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                     ['phone', 'Phone', 'tel', '+1 234 567 8900'],
                   ] as const).map(([field, label, type, placeholder]) => (
                     <label key={field} className="field-block">
-                      <span>{label}</span>
+                      <span>{label} <span aria-hidden="true" style={{ color: 'var(--danger)' }}>*</span></span>
                       <input
                         suppressHydrationWarning
                         type={type}
                         placeholder={placeholder}
+                        required
                         value={formData[field]}
                         onChange={(event) => setFormData({ ...formData, [field]: event.target.value })}
                         onBlur={() => markTouched(field)}
@@ -280,8 +291,26 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                 </div>
               )}
 
+              {insuranceEnabled && insuranceFee > 0 && (
+                <div className="info-card">
+                  <h2>Insurance <span style={{ fontSize: '0.8em', fontWeight: 400, color: 'var(--ink-500)' }}>(optional)</span></h2>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--ink-500)', marginBottom: '1rem' }}>
+                    Cover damage and theft for the duration of your rental.
+                  </p>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: '0.75rem', background: wantsInsurance ? 'var(--accent-surface)' : '#fff' }}>
+                    <input
+                      type="checkbox"
+                      checked={wantsInsurance}
+                      onChange={(e) => setWantsInsurance(e.target.checked)}
+                    />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Add insurance cover</span>
+                    <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--accent)' }}>+${insuranceFee}</span>
+                  </label>
+                </div>
+              )}
+
               <div className="info-card">
-                <h2>Rental calendar</h2>
+                <h2 id="dates-heading">Rental dates</h2>
                 <AvailabilityCalendar
                   bookedRanges={vehicle.bookedRanges}
                   checkIn={checkIn}
@@ -357,6 +386,24 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                   </div>
                 </div>
 
+                {cancellationPolicy && (
+                  <div style={{
+                    background: 'var(--surface-soft)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.75rem',
+                    padding: '0.75rem 1rem',
+                    marginBottom: '0.75rem',
+                    display: 'flex',
+                    gap: '0.5rem',
+                    alignItems: 'flex-start',
+                  }}>
+                    <span style={{ fontSize: '0.85rem', flexShrink: 0, marginTop: '0.05rem' }}>ⓘ</span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--ink-700)', lineHeight: '1.5' }}>
+                      <strong>Cancellation policy:</strong> {cancellationPolicy}
+                    </span>
+                  </div>
+                )}
+
                 <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
                   <input
                     type="checkbox"
@@ -376,9 +423,12 @@ export default function ReservationFlow({ vehicleId }: { vehicleId: string }) {
                   onClick={confirmReservation}
                   disabled={isSubmitting || reservationBlocked}
                 >
-                  {isSubmitting ? 'Redirecting...' : 'Continue to payment'}
+                  <Lock className="w-4 h-4" />
+                  {isSubmitting ? 'Redirecting…' : `Reserve · $${total} total`}
                 </button>
-                <p className="muted-label">You will only be charged after your rental is confirmed.</p>
+                <p className="muted-label" style={{ textAlign: 'center', fontSize: '0.78rem' }}>
+                  <Lock className="inline w-3 h-3" /> Secured by Stripe · Charged after confirmation
+                </p>
               </div>
             </aside>
           </div>

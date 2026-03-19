@@ -29,6 +29,7 @@ model Reservation {
   airportFee      Int      @default(0)
   dropoffLocation String   @default("")
   insuranceFee    Int      @default(0)
+  notes           String   @default("")
 
   @@index([status])
   @@index([vehicleId])

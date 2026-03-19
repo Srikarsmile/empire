@@ -20,6 +20,11 @@ export interface HowToRentStep {
   body: string;
 }
 
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 export interface SiteContentData {
   hero: {
     headline: string;
@@ -51,6 +56,8 @@ export interface SiteContentData {
     description: string;
     steps: HowToRentStep[];
   };
+  cancellationPolicy: string;
+  faqs: FaqItem[];
 }
 
 export const defaultContent: SiteContentData = {
@@ -96,6 +103,14 @@ export const defaultContent: SiteContentData = {
       { title: '3. Arrive and drive', body: 'Review clear totals, submit your driver details, and meet the Empire team at the airport, hotel, villa, or agreed pickup point for handoff.' },
     ],
   },
+  cancellationPolicy: 'Free cancellation up to 48 hours before pickup. After that, cancellations are non-refundable.',
+  faqs: [
+    { question: 'Do I need an international driving license?', answer: 'A valid driving license from your home country is accepted. An international driving permit (IDP) is recommended but not required for most nationalities.' },
+    { question: 'What is your cancellation policy?', answer: 'Free cancellation up to 48 hours before pickup. After that, the booking is non-refundable.' },
+    { question: 'Is airport delivery available?', answer: 'Yes, we deliver directly to Gregorio Luperón International Airport (POP), Sosua hotels, and villas. Select the airport drop-off option at checkout.' },
+    { question: 'What documents do I need at pickup?', answer: 'Bring a valid driving license, passport or national ID, and the payment card used for the booking.' },
+    { question: 'Is insurance included?', answer: 'Basic coverage is available as an optional add-on at checkout. All vehicles are fully maintained and road-ready.' },
+  ],
 };
 
 export async function getSiteContent(): Promise<SiteContentData> {
@@ -109,6 +124,8 @@ export async function getSiteContent(): Promise<SiteContentData> {
     business: { ...defaultContent.business, ...stored.business },
     footer: { ...defaultContent.footer, ...stored.footer, columns: stored.footer?.columns ?? defaultContent.footer.columns },
     howToRent: { ...defaultContent.howToRent, ...stored.howToRent, steps: stored.howToRent?.steps ?? defaultContent.howToRent.steps },
+    cancellationPolicy: stored.cancellationPolicy ?? defaultContent.cancellationPolicy,
+    faqs: stored.faqs ?? defaultContent.faqs,
   };
 }
 

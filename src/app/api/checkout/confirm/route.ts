@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { findBySessionId, addReservation } from '@/lib/reservationStore';
-import { buildConfirmationEmail } from '@/lib/emailTemplates';
+import { buildConfirmationEmail, buildAdminBookingAlert } from '@/lib/emailTemplates';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
@@ -68,6 +68,28 @@ export async function GET(request: Request) {
             subject: subPending,
             html: htmlPending,
           });
+          const adminEmailPending = process.env.ADMIN_EMAIL;
+          if (adminEmailPending) {
+            const { subject: aSubject, html: aHtml } = buildAdminBookingAlert({
+              firstName: existing.firstName,
+              lastName: existing.lastName,
+              email: existing.email,
+              phone: existing.phone,
+              vehicleTitle: existing.vehicleTitle,
+              checkIn: existing.checkIn,
+              checkOut: existing.checkOut,
+              nights: existing.nights,
+              total: existing.total,
+              bookingRef: bookingRefPending,
+              adminUrl: `${appUrlPending}/admin/reservations`,
+            });
+            await resendPending.emails.send({
+              from: 'Empire Cars <noreply@empirerentcar.com>',
+              to: adminEmailPending,
+              subject: aSubject,
+              html: aHtml,
+            });
+          }
         } catch (err) {
           console.error('Confirm: failed to send confirmation for payment_pending upgrade:', err);
         }
@@ -132,6 +154,34 @@ export async function GET(request: Request) {
         subject,
         html,
       });
+
+      // Admin notification (best-effort)
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (adminEmail) {
+        try {
+          const { subject: adminSubject, html: adminHtml } = buildAdminBookingAlert({
+            firstName: meta.firstName,
+            lastName: meta.lastName,
+            email: meta.email,
+            phone: meta.phone,
+            vehicleTitle: meta.vehicleTitle,
+            checkIn: meta.checkIn,
+            checkOut: meta.checkOut,
+            nights: meta.nights,
+            total: meta.total,
+            bookingRef,
+            adminUrl: `${appUrl}/admin/reservations`,
+          });
+          await resend.emails.send({
+            from: 'Empire Cars <noreply@empirerentcar.com>',
+            to: adminEmail,
+            subject: adminSubject,
+            html: adminHtml,
+          });
+        } catch (adminErr) {
+          console.error('Confirm route: failed to send admin notification:', adminErr);
+        }
+      }
     } catch (err) {
       console.error('Confirm route: failed to send confirmation email:', err);
     }

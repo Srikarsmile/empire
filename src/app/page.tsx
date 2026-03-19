@@ -83,6 +83,30 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      {siteContent.faqs && siteContent.faqs.length > 0 && (
+        <section className="py-24 border-t border-[var(--border)]">
+          <div className="px-4 sm:px-6 mx-auto max-w-7xl">
+            <div className="mb-12 max-w-2xl">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--ink-900)] mb-4">
+                Frequently asked questions
+              </h2>
+              <p className="text-lg text-[var(--ink-700)] font-medium">
+                Everything you need to know before you book.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">
+              {siteContent.faqs.map((faq, i) => (
+                <div key={i} className="p-6 rounded-2xl bg-[var(--surface-soft)] border border-[var(--border)]">
+                  <h3 className="font-semibold text-[var(--ink-900)] mb-2 text-base">{faq.question}</h3>
+                  <p className="text-[var(--ink-700)] text-sm leading-relaxed">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Fleet Section Wrapper */}
       <div id="fleet" className="pt-28 pb-24 mt-4 relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 mb-16 text-center max-w-3xl flex flex-col items-center">

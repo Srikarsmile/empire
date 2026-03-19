@@ -52,6 +52,14 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const cookieStore = await cookies();
+  const email = cookieStore.get('empire_email')?.value;
+  const role = cookieStore.get('empire_role')?.value;
+
+  if (!email && role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const data = (await request.json()) as Record<string, unknown>;
     const newReservation = await addReservation(data as Parameters<typeof addReservation>[0]);

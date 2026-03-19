@@ -669,6 +669,260 @@ export function buildPaymentRequestEmail(data: PaymentRequestEmailData): { subje
 }
 
 /* ─────────────────────────────────────────────
+   Admin Booking Alert Email
+   ───────────────────────────────────────────── */
+
+interface AdminBookingAlertData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  vehicleTitle: string;
+  checkIn: string;
+  checkOut: string;
+  nights: string | number;
+  total: string | number;
+  bookingRef: string;
+  adminUrl: string;
+}
+
+export function buildAdminBookingAlert(data: AdminBookingAlertData): { subject: string; html: string } {
+  const { firstName, lastName, email, phone, vehicleTitle, checkIn, checkOut, nights, total, bookingRef, adminUrl } = data;
+
+  const subject = `New booking — ${vehicleTitle} · ${bookingRef}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:600px;" cellpadding="0" cellspacing="0">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#111111;border-radius:16px 16px 0 0;padding:28px 32px;">
+                <tr>
+                  <td>
+                    <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">🚗 Empire Cars Sosua</p>
+                    <p style="margin:6px 0 0;font-size:13px;color:#999999;letter-spacing:0.5px;text-transform:uppercase;">New Booking Alert</p>
+                  </td>
+                  <td align="right">
+                    <p style="margin:0;background:#27272a;border-radius:8px;padding:8px 14px;font-size:12px;color:#a1a1aa;display:inline-block;">
+                      Ref <strong style="color:#ffffff;">${bookingRef}</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main card -->
+          <tr>
+            <td style="background:#ffffff;padding:32px;border-radius:0 0 16px 16px;">
+              <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#111111;letter-spacing:-0.5px;">
+                New booking received
+              </h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#52525b;line-height:1.6;">
+                A customer has just completed a booking. Details below.
+              </p>
+
+              <hr style="border:none;border-top:1px solid #e4e4e7;margin:0 0 28px;" />
+
+              <!-- Booking details -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td colspan="2" style="padding-bottom:12px;">
+                    <p style="margin:0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#a1a1aa;">Booking Details</p>
+                  </td>
+                </tr>
+                <tr style="background:#f9f9fb;">
+                  <td style="padding:12px 14px;border-radius:8px 0 0 0;font-size:13px;color:#71717a;font-weight:500;">Guest</td>
+                  <td style="padding:12px 14px;border-radius:0 8px 0 0;font-size:14px;color:#111111;font-weight:600;">${firstName} ${lastName}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 14px;font-size:13px;color:#71717a;font-weight:500;border-top:1px solid #f1f1f3;">Email</td>
+                  <td style="padding:12px 14px;font-size:14px;color:#111111;font-weight:600;border-top:1px solid #f1f1f3;">${email}</td>
+                </tr>
+                <tr style="background:#f9f9fb;">
+                  <td style="padding:12px 14px;font-size:13px;color:#71717a;font-weight:500;">Phone</td>
+                  <td style="padding:12px 14px;font-size:14px;color:#111111;font-weight:600;">${phone}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 14px;font-size:13px;color:#71717a;font-weight:500;border-top:1px solid #f1f1f3;">Vehicle</td>
+                  <td style="padding:12px 14px;font-size:14px;color:#111111;font-weight:600;border-top:1px solid #f1f1f3;">${vehicleTitle}</td>
+                </tr>
+                <tr style="background:#f9f9fb;">
+                  <td style="padding:12px 14px;font-size:13px;color:#71717a;font-weight:500;">Pickup date</td>
+                  <td style="padding:12px 14px;font-size:14px;color:#111111;font-weight:600;">${formatDate(checkIn)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 14px;font-size:13px;color:#71717a;font-weight:500;border-top:1px solid #f1f1f3;">Return date</td>
+                  <td style="padding:12px 14px;font-size:14px;color:#111111;font-weight:600;border-top:1px solid #f1f1f3;">${formatDate(checkOut)}</td>
+                </tr>
+                <tr style="background:#f9f9fb;">
+                  <td style="padding:12px 14px;font-size:13px;color:#71717a;font-weight:500;">Duration</td>
+                  <td style="padding:12px 14px;font-size:14px;color:#111111;font-weight:600;">${nights} day${Number(nights) !== 1 ? 's' : ''}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 14px;font-size:13px;color:#71717a;font-weight:500;border-top:1px solid #f1f1f3;">Total paid</td>
+                  <td style="padding:12px 14px;font-size:18px;color:#111111;font-weight:800;border-top:1px solid #f1f1f3;">$${total}</td>
+                </tr>
+              </table>
+
+              <!-- CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+                <tr>
+                  <td align="center">
+                    <a href="${adminUrl}"
+                       style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:15px;font-weight:700;letter-spacing:0.2px;">
+                      View in Admin →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding:24px 16px;">
+              <p style="margin:0;font-size:12px;color:#a1a1aa;line-height:1.6;">
+                Empire Cars Sosua &nbsp;·&nbsp; Internal notification — do not reply
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject, html };
+}
+
+/* ─────────────────────────────────────────────
+   Post-Trip Review Request Email
+   ───────────────────────────────────────────── */
+
+interface ReviewRequestEmailData {
+  firstName: string;
+  vehicleTitle: string;
+  vehicleId: string;
+  bookingRef: string;
+  appUrl: string;
+}
+
+export function buildReviewRequestEmail(data: ReviewRequestEmailData): { subject: string; html: string } {
+  const { firstName, vehicleTitle, vehicleId, bookingRef, appUrl } = data;
+
+  const subject = `How was your ${vehicleTitle}? Leave a quick review`;
+  const reviewUrl = `${appUrl}/fleet/${vehicleId}#reviews`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:600px;" cellpadding="0" cellspacing="0">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#111111;border-radius:16px 16px 0 0;padding:28px 32px;">
+                <tr>
+                  <td>
+                    <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">🚗 Empire Cars Sosua</p>
+                    <p style="margin:6px 0 0;font-size:13px;color:#999999;letter-spacing:0.5px;text-transform:uppercase;">How was your rental?</p>
+                  </td>
+                  <td align="right">
+                    <p style="margin:0;background:#27272a;border-radius:8px;padding:8px 14px;font-size:12px;color:#a1a1aa;display:inline-block;">
+                      Ref <strong style="color:#ffffff;">#${bookingRef}</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main card -->
+          <tr>
+            <td style="background:#ffffff;padding:32px;border-radius:0 0 16px 16px;">
+
+              <h1 style="margin:0 0 8px;font-size:26px;font-weight:800;color:#111111;letter-spacing:-0.5px;">
+                Hope you enjoyed the ride, ${firstName}!
+              </h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#52525b;line-height:1.6;">
+                Your rental of <strong>${vehicleTitle}</strong> is now complete. We'd love to hear what you thought — it takes less than a minute!
+              </p>
+
+              <hr style="border:none;border-top:1px solid #e4e4e7;margin:0 0 28px;" />
+
+              <!-- Stars visual -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0;font-size:40px;letter-spacing:4px;">⭐⭐⭐⭐⭐</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${reviewUrl}"
+                       style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:15px;font-weight:700;letter-spacing:0.2px;">
+                      Leave a Review →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;color:#71717a;line-height:1.7;text-align:center;">
+                Your feedback helps us improve and helps other travellers choose the right vehicle.<br />
+                Thank you for choosing Empire Cars!
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding:24px 16px;">
+              <p style="margin:0;font-size:12px;color:#a1a1aa;line-height:1.6;">
+                Empire Cars Sosua &nbsp;·&nbsp; Sosua, Puerto Plata, Dominican Republic<br />
+                <a href="${appUrl}" style="color:#a1a1aa;">${appUrl}</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject, html };
+}
+
+/* ─────────────────────────────────────────────
    OTP / Login Code Email
    ───────────────────────────────────────────── */
 

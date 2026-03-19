@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { SiteContentData } from '@/lib/siteContent';
+import { Plus, Trash2 } from 'lucide-react';
+import type { SiteContentData, FaqItem } from '@/lib/siteContent';
 import { defaultContent } from '@/lib/siteContent';
 
 export default function ContentPage() {
@@ -57,6 +58,23 @@ export default function ContentPage() {
       j === i ? { ...step, [field]: value } : step
     );
     setContent({ ...content, howToRent: { ...content.howToRent, steps } });
+  }
+
+  function updateFaq(i: number, field: keyof FaqItem, value: string) {
+    const faqs = (content.faqs ?? []).map((faq, j) =>
+      j === i ? { ...faq, [field]: value } : faq
+    );
+    setContent({ ...content, faqs });
+  }
+
+  function addFaq() {
+    const faqs = [...(content.faqs ?? []), { question: '', answer: '' }];
+    setContent({ ...content, faqs });
+  }
+
+  function removeFaq(i: number) {
+    const faqs = (content.faqs ?? []).filter((_, j) => j !== i);
+    setContent({ ...content, faqs });
   }
 
   const inputCls = 'mt-1 block w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-black';
@@ -252,6 +270,62 @@ export default function ContentPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Booking Policy */}
+        <section className="bg-white rounded-2xl border border-gray-200 p-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Booking Policy</h2>
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">Cancellation policy</span>
+            <p className="text-xs text-gray-500 mt-0.5 mb-1.5">Shown to customers above the checkout button in the booking sidebar.</p>
+            <textarea rows={3} className={`${inputCls} resize-none`}
+              value={content.cancellationPolicy ?? ''}
+              onChange={(e) => setContent({ ...content, cancellationPolicy: e.target.value })} />
+          </label>
+        </section>
+
+        {/* FAQs */}
+        <section className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900">FAQs</h2>
+            <button
+              type="button"
+              onClick={addFaq}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add FAQ
+            </button>
+          </div>
+          <div className="space-y-4">
+            {(content.faqs ?? []).map((faq, i) => (
+              <div key={i} className="border border-gray-100 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">FAQ {i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeFaq(i)}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label="Remove FAQ"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <label className="block">
+                  <span className="text-xs font-medium text-gray-500">Question</span>
+                  <input className={smallInputCls} value={faq.question}
+                    onChange={(e) => updateFaq(i, 'question', e.target.value)} />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-gray-500">Answer</span>
+                  <textarea rows={3} className={`${smallInputCls} resize-none`} value={faq.answer}
+                    onChange={(e) => updateFaq(i, 'answer', e.target.value)} />
+                </label>
+              </div>
+            ))}
+            {(content.faqs ?? []).length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-4">No FAQs yet. Click &ldquo;Add FAQ&rdquo; to create one.</p>
+            )}
           </div>
         </section>
 

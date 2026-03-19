@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, Download, ChevronLeft, ChevronRight, StickyNote } from "lucide-react";
 import Link from "next/link";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -18,6 +18,7 @@ interface Reservation {
   total: number;
   status: string;
   createdAt: string;
+  notes: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -228,7 +229,7 @@ export default function ReservationsPage() {
                   <th className="w-10 pl-6 py-3">
                     <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded border-gray-300 cursor-pointer" aria-label="Select all" />
                   </th>
-                  {['Guest', 'Email', 'Vehicle', 'Check-in', 'Check-out', 'Nights', 'Total', 'Status', 'Booked'].map((h) => (
+                  {['Guest', 'Email', 'Vehicle', 'Check-in', 'Check-out', 'Nights', 'Total', 'Status', 'Booked', ''].map((h) => (
                     <th key={h} className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -239,7 +240,11 @@ export default function ReservationsPage() {
                     <td className="pl-6 py-4">
                       <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleOne(r.id)} className="rounded border-gray-300 cursor-pointer" aria-label={`Select ${r.firstName} ${r.lastName}`} />
                     </td>
-                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{r.firstName} {r.lastName}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                      <Link href={`/admin/reservations/${r.id}`} className="hover:underline underline-offset-2">
+                        {r.firstName} {r.lastName}
+                      </Link>
+                    </td>
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{r.email}</td>
                     <td className="px-6 py-4 text-gray-600">{r.vehicleTitle}</td>
                     <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{r.checkIn}</td>
@@ -260,6 +265,13 @@ export default function ReservationsPage() {
                     </td>
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                       {new Date(r.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      {r.notes ? (
+                        <span title={r.notes} className="inline-flex items-center text-amber-500">
+                          <StickyNote className="w-4 h-4" />
+                        </span>
+                      ) : null}
                     </td>
                   </tr>
                 ))}

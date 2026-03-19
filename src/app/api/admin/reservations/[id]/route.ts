@@ -5,19 +5,41 @@ import { Resend } from 'resend';
 import { buildCancellationEmail } from '@/lib/emailTemplates';
 import type { DateRange } from '@/lib/dateUtils';
 
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await requireAdmin();
+  if (authError instanceof NextResponse) return authError;
+  const { id } = await params;
+
+  const reservation = await prisma.reservation.findUnique({ where: { id } });
+  if (!reservation) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  return NextResponse.json(reservation);
+}
+
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const authError = await requireAdmin();
   if (authError instanceof NextResponse) return authError;
   const { id } = await params;
-  const { status } = await request.json();
+  const body = await request.json();
+  const { status, notes } = body as { status?: string; notes?: string };
 
-  if (!['upcoming', 'completed', 'cancelled', 'payment_pending'].includes(status)) {
+  // notes-only update
+  if (notes !== undefined && status === undefined) {
+    const reservation = await prisma.reservation.update({
+      where: { id },
+      data: { notes },
+    });
+    return NextResponse.json(reservation);
+  }
+
+  if (!status || !['upcoming', 'completed', 'cancelled', 'payment_pending'].includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
   const reservation = await prisma.reservation.update({
     where: { id },
-    data: { status },
+    data: { status, ...(notes !== undefined ? { notes } : {}) },
   });
 
   // When cancelling, release the blocked dates back so the calendar shows them as available

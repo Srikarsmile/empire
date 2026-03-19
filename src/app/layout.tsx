@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Caveat } from 'next/font/google';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import WhatsAppButton from '@/components/WhatsAppButton';
 import { AuthProvider } from '@/lib/AuthContext';
 import LoginModal from '@/components/auth/LoginModal';
 import PageTransition from '@/components/PageTransition';
@@ -90,6 +91,7 @@ export default async function RootLayout({
           </main>
           <Footer currentYear={currentYear} footerData={siteContent.footer} />
           <LoginModal />
+          <WhatsAppButton phone={siteContent.business.phone} />
         </AuthProvider>
       </body>
     </html>
