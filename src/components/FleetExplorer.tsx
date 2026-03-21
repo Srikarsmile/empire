@@ -150,6 +150,7 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
   }, []);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => {
@@ -222,6 +223,12 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
     document.body.style.overflow = mobileFiltersOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [mobileFiltersOpen]);
+
+  useEffect(() => {
+    setIsFiltering(true);
+    const t = setTimeout(() => setIsFiltering(false), 150);
+    return () => clearTimeout(t);
+  }, [searchQuery, checkIn, checkOut, guests, maxPrice, selectedAmenities, sortBy, favoritesOnly]);
 
   const activeFilterCount =
     selectedAmenities.length +
@@ -395,6 +402,12 @@ export default function FleetExplorer({ vehicles }: { vehicles: Vehicle[] }) {
                     Clear all filters
                   </button>
                 </motion.div>
+              ) : isFiltering ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="skeleton" style={{ height: '22rem', borderRadius: '0.75rem' }} />
+                  ))}
+                </div>
               ) : (
                 <motion.div
                   className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8"

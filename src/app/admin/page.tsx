@@ -4,11 +4,13 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
-  const [totalReservations, upcomingCount, revenueAgg, recent] = await Promise.all([
+  const [totalReservations, upcomingCount, revenueAgg, recent, pendingCount, vehicles] = await Promise.all([
     prisma.reservation.count(),
     prisma.reservation.count({ where: { status: 'upcoming' } }),
     prisma.reservation.aggregate({ _sum: { total: true }, where: { status: { not: 'cancelled' } } }),
     prisma.reservation.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }),
+    prisma.reservation.count({ where: { status: 'payment_pending' } }),
+    prisma.vehicle.findMany({ orderBy: { createdAt: 'asc' }, select: { id: true, title: true, paused: true, bookedRanges: true } }),
   ]);
 
   // Monthly revenue — last 6 months (using server-side filtering per month)
@@ -52,6 +54,13 @@ export default async function AdminDashboard() {
     .slice(0, 5)
     .map(([title, data]) => ({ title, ...data }));
 
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' });
+    return { key, label };
+  });
+
   const stats = [
     { label: 'Total Bookings', value: totalReservations.toString(), sub: 'All time' },
     { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString()}`, sub: 'Excluding cancelled' },
@@ -78,6 +87,73 @@ export default async function AdminDashboard() {
             <p className="mt-1 text-xs text-gray-400">{stat.sub}</p>
           </div>
         ))}
+      </div>
+
+      {pendingCount > 0 && (
+        <div className="bg-white rounded-2xl border-2 border-orange-300 p-4 flex items-center gap-4 shadow-sm">
+          <span className="text-orange-500 text-xl">⚠</span>
+          <p className="text-sm font-medium text-gray-700 flex-1">
+            <strong>{pendingCount}</strong> {pendingCount === 1 ? 'reservation' : 'reservations'} awaiting payment
+          </p>
+          <a href="/admin/reservations?status=payment_pending" className="text-sm font-semibold text-orange-600 hover:text-orange-700 transition-colors">
+            View →
+          </a>
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900">Fleet Availability — This Week</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Green = available · Red = booked · Gray = paused</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide min-w-[10rem]">Vehicle</th>
+                {weekDays.map((d) => (
+                  <th key={d.key} className="text-center px-2 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide min-w-[3.5rem]">
+                    {d.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {vehicles.map((v) => {
+                const bookedSet = new Set<string>();
+                const ranges = (v.bookedRanges as unknown as Array<{start: string; end: string}>) ?? [];
+                ranges.forEach((r) => {
+                  let cur = new Date(r.start + 'T00:00:00');
+                  const end = new Date(r.end + 'T00:00:00');
+                  while (cur < end) {
+                    const k = cur.toISOString().split('T')[0];
+                    bookedSet.add(k);
+                    cur = new Date(cur.getTime() + 86400000);
+                  }
+                });
+                return (
+                  <tr key={v.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-gray-800 truncate max-w-[12rem]">
+                      {v.paused ? <span className="text-gray-400">{v.title}</span> : v.title}
+                    </td>
+                    {weekDays.map((d) => {
+                      const dot = v.paused
+                        ? 'bg-gray-300'
+                        : bookedSet.has(d.key)
+                        ? 'bg-red-400'
+                        : 'bg-green-400';
+                      return (
+                        <td key={d.key} className="px-2 py-3 text-center">
+                          <span className={`inline-block w-3 h-3 rounded-full ${dot}`} />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Monthly Revenue */}

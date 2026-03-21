@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { CreditCard } from 'lucide-react';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import Toast from '@/components/Toast';
 
 type ReservationStatus = 'upcoming' | 'completed' | 'payment_pending' | 'cancelled';
 
@@ -46,6 +48,9 @@ export default function ReservationsPage() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed'>('upcoming');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
+  const [successToast, setSuccessToast] = useState('');
 
   const fetchReservations = () => {
     setIsLoading(true);
@@ -64,6 +69,22 @@ export default function ReservationsPage() {
         setError(err.message);
         setIsLoading(false);
       });
+  };
+
+  const handleCancel = async (id: string) => {
+    setCancellingId(id);
+    try {
+      const res = await fetch(`/api/reservations/${id}/cancel`, { method: 'PATCH' });
+      if (!res.ok) throw new Error('Failed to cancel');
+      setReservations((prev) => prev.filter((r) => r.id !== id));
+      setSuccessToast('Reservation cancelled successfully.');
+    } catch {
+      setSuccessToast('');
+      // Keep reservation in list on error
+    } finally {
+      setCancellingId(null);
+      setCancelConfirmId(null);
+    }
   };
 
   useEffect(() => {
@@ -88,7 +109,8 @@ export default function ReservationsPage() {
   );
 
   return (
-    <div className="page-shell bookings-page">
+    <>
+      <div className="page-shell bookings-page">
       <div className="shell">
         <div className="bookings-head">
           <h1>Reservations</h1>
@@ -144,17 +166,18 @@ export default function ReservationsPage() {
             >
               {filteredReservations.length === 0 ? (
                 <div className="no-results bookings-empty">
-                  <h3>No {activeTab} rentals yet</h3>
-                  <p>
-                    {activeTab === 'upcoming'
-                      ? 'Reserve a vehicle and it will appear here.'
-                      : 'Completed rentals will appear after return.'}
-                  </p>
                   {activeTab === 'upcoming' ? (
-                    <Link href="/" className="btn-primary">
-                      Explore fleet
-                    </Link>
-                  ) : null}
+                    <>
+                      <h3>No upcoming rentals</h3>
+                      <p>Reserve a vehicle and it will appear here.</p>
+                      <Link href="/#fleet" className="btn-primary">Browse our fleet →</Link>
+                    </>
+                  ) : (
+                    <>
+                      <h3>No completed rentals yet</h3>
+                      <p>Completed rentals will appear here after your return.</p>
+                    </>
+                  )}
                 </div>
               ) : (
                 filteredReservations.map((reservation, index) => {
@@ -185,7 +208,7 @@ export default function ReservationsPage() {
                             ? `${formatDate(reservation.checkIn)} → ${formatDate(reservation.checkOut)}`
                             : 'Pickup and return dates will be finalized soon'}
                         </p>
-                        <small>Ref: {toRef(reservation.id)}</small>
+                        <small>Ref: <code style={{ fontFamily: 'monospace', background: 'var(--surface-soft)', padding: '0.1rem 0.3rem', borderRadius: '0.3rem' }}>{toRef(reservation.id)}</code></small>
                       </div>
                       <div className="booking-item-side">
                         <strong>${reservation.total ?? Math.round(reservation.price * 4 * 1.14)}</strong>
@@ -202,13 +225,23 @@ export default function ReservationsPage() {
                             View vehicle
                           </Link>
                         )}
+                        {reservation.status === 'upcoming' && (
+                          <button
+                            className="btn-outline"
+                            style={{ fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)', minHeight: '2.25rem', padding: '0.4rem 0.85rem' }}
+                            onClick={() => setCancelConfirmId(reservation.id)}
+                            disabled={cancellingId === reservation.id}
+                          >
+                            {cancellingId === reservation.id ? 'Cancelling…' : 'Cancel'}
+                          </button>
+                        )}
                         {reservation.status === 'completed' && (
                           <Link
                             href={`/fleet/${reservation.vehicleId}#reviews`}
                             className="btn-primary"
                             style={{ fontSize: '0.8rem', textAlign: 'center' }}
                           >
-                            Leave a review
+                            Leave a review →
                           </Link>
                         )}
                       </div>
@@ -221,5 +254,20 @@ export default function ReservationsPage() {
         ) : null}
       </div>
     </div>
+
+      <ConfirmDialog
+        isOpen={cancelConfirmId !== null}
+        title="Cancel reservation?"
+        message="This will release your dates and send a cancellation confirmation email. This action cannot be undone."
+        confirmLabel="Yes, cancel booking"
+        danger
+        onConfirm={() => cancelConfirmId && handleCancel(cancelConfirmId)}
+        onCancel={() => setCancelConfirmId(null)}
+      />
+
+      {successToast && (
+        <Toast message={successToast} onClose={() => setSuccessToast('')} />
+      )}
+    </>
   );
 }

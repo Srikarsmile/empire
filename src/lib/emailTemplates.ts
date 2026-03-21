@@ -210,7 +210,7 @@ export function buildConfirmationEmail(data: BookingEmailData): { subject: strin
               <p style="margin:0;font-size:13px;color:#71717a;line-height:1.7;text-align:center;">
                 Our team will contact you 24 hours before pickup to confirm the exact location and time.<br />
                 ${adminPhone
-                  ? `Questions? Call or WhatsApp us at <a href="tel:${adminPhone}" style="color:#111111;font-weight:600;">${adminPhone}</a>.`
+                  ? `Questions? <a href="https://wa.me/${adminPhone.replace(/[^0-9]/g, '')}" style="color:#111111;font-weight:600;">WhatsApp us at ${adminPhone}</a> or call <a href="tel:${adminPhone}" style="color:#111111;font-weight:600;">${adminPhone}</a>.`
                   : 'Questions? Reply to this email.'}
               </p>
 
@@ -339,7 +339,7 @@ export function buildCancellationEmail(data: CancellationEmailData): { subject: 
               <p style="margin:0;font-size:13px;color:#71717a;line-height:1.7;text-align:center;">
                 If you have questions or believe this was a mistake, please contact us.<br />
                 ${adminPhone
-                  ? `Call or WhatsApp: <a href="tel:${adminPhone}" style="color:#111111;font-weight:600;">${adminPhone}</a>`
+                  ? `<a href="https://wa.me/${adminPhone.replace(/[^0-9]/g, '')}" style="color:#111111;font-weight:600;">WhatsApp us at ${adminPhone}</a> or call <a href="tel:${adminPhone}" style="color:#111111;font-weight:600;">${adminPhone}</a>`
                   : 'Reply to this email and we\'ll be happy to help.'}
               </p>
 
@@ -486,7 +486,7 @@ export function buildReminderEmail(data: ReminderEmailData): { subject: string; 
               <p style="margin:0;font-size:13px;color:#71717a;line-height:1.7;text-align:center;">
                 Our team will contact you to confirm the exact pickup location and time.<br />
                 ${adminPhone
-                  ? `Questions? Call or WhatsApp us at <a href="tel:${adminPhone}" style="color:#111111;font-weight:600;">${adminPhone}</a>.`
+                  ? `Questions? <a href="https://wa.me/${adminPhone.replace(/[^0-9]/g, '')}" style="color:#111111;font-weight:600;">WhatsApp us at ${adminPhone}</a> or call <a href="tel:${adminPhone}" style="color:#111111;font-weight:600;">${adminPhone}</a>.`
                   : 'Questions? Reply to this email.'}
               </p>
 
@@ -640,7 +640,7 @@ export function buildPaymentRequestEmail(data: PaymentRequestEmailData): { subje
               <p style="margin:0;font-size:13px;color:#71717a;line-height:1.7;text-align:center;">
                 Questions about your booking?<br />
                 ${adminPhone
-                  ? `Call or WhatsApp us at <a href="tel:${adminPhone}" style="color:#111111;font-weight:600;">${adminPhone}</a>.`
+                  ? `<a href="https://wa.me/${adminPhone.replace(/[^0-9]/g, '')}" style="color:#111111;font-weight:600;">WhatsApp us at ${adminPhone}</a> or call <a href="tel:${adminPhone}" style="color:#111111;font-weight:600;">${adminPhone}</a>.`
                   : 'Reply to this email and we\'ll be happy to help.'}
               </p>
 

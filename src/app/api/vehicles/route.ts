@@ -4,9 +4,15 @@ import { requireAdmin } from '@/lib/adminAuth';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const all = searchParams.get('all') === '1'; // admin uses ?all=1 to see paused
+  const wantsAll = searchParams.get('all') === '1';
+
+  if (wantsAll) {
+    const authError = await requireAdmin();
+    if (authError instanceof NextResponse) return authError;
+  }
+
   const vehicles = await prisma.vehicle.findMany({
-    where: all ? undefined : { paused: false },
+    where: wantsAll ? undefined : { paused: false },
     orderBy: { createdAt: 'asc' },
   });
   return NextResponse.json(vehicles);
@@ -48,6 +54,7 @@ export async function POST(request: Request) {
         minNights: body.minNights ?? 2,
         bookedRanges: body.bookedRanges ?? [],
         reviews: body.reviews ?? [],
+        websiteUrl: body.websiteUrl || '',
       },
     });
 

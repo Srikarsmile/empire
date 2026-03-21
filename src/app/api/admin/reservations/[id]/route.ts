@@ -64,7 +64,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://empirerentcar.com';
       const sc = await prisma.siteContent.findFirst();
       const scData = (sc?.data as Record<string, unknown>) ?? {};
-      const adminPhone = (scData.companyPhone as string) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
+      const adminPhone = (scData.companyPhone as string) || ((scData.business as Record<string, string>)?.phone) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
       const bookingRef = reservation.id.slice(-8).toUpperCase();
       const { subject, html } = buildCancellationEmail({
         firstName: reservation.firstName,

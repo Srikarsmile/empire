@@ -11,6 +11,7 @@ export interface VehicleBase {
   images: string[];
   imageBlurs: string[];
   location: string;
+  websiteUrl: string;
 }
 
 export interface EnrichedVehicle extends VehicleBase {
@@ -36,6 +37,7 @@ function toEnriched(v: {
   minNights: number;
   bookedRanges: unknown;
   reviews: unknown;
+  websiteUrl: string;
 }): EnrichedVehicle {
   return {
     ...v,

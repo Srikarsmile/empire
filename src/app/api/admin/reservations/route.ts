@@ -151,7 +151,7 @@ export async function POST(request: Request) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       const sc = await prisma.siteContent.findFirst();
       const scData = (sc?.data as Record<string, unknown>) ?? {};
-      const adminPhone = (scData.companyPhone as string) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
+      const adminPhone = (scData.companyPhone as string) || ((scData.business as Record<string, string>)?.phone) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
       const bookingRef = reservation.id.slice(-8).toUpperCase();
       const { subject, html } = buildPaymentRequestEmail({
         firstName: body.firstName,
@@ -234,7 +234,7 @@ export async function POST(request: Request) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://empirerentcar.com';
       const sc = await prisma.siteContent.findFirst();
       const scData = (sc?.data as Record<string, unknown>) ?? {};
-      const adminPhone = (scData.companyPhone as string) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
+      const adminPhone = (scData.companyPhone as string) || ((scData.business as Record<string, string>)?.phone) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
       const bookingRef = reservation.id.slice(-8).toUpperCase();
       const { subject, html: confirmHtml } = buildConfirmationEmail({
         firstName: body.firstName,

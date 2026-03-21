@@ -38,7 +38,7 @@ export async function GET(request: Request) {
         const appUrlPending = process.env.NEXT_PUBLIC_APP_URL ?? 'https://empirerentcar.com';
         const scPending = await prisma.siteContent.findFirst();
         const scDataPending = (scPending?.data as Record<string, unknown>) ?? {};
-        const adminPhonePending = (scDataPending.companyPhone as string) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
+        const adminPhonePending = (scDataPending.companyPhone as string) || ((scDataPending.business as Record<string, string>)?.phone) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
         const bookingRefPending = existing.id.slice(-8).toUpperCase();
         const resendPending = new Resend(process.env.RESEND_API_KEY);
         const { subject: subPending, html: htmlPending } = buildConfirmationEmail({
@@ -126,7 +126,7 @@ export async function GET(request: Request) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://empirerentcar.com';
       const sc = await prisma.siteContent.findFirst();
       const scData = (sc?.data as Record<string, unknown>) ?? {};
-      const adminPhone = (scData.companyPhone as string) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
+      const adminPhone = (scData.companyPhone as string) || ((scData.business as Record<string, string>)?.phone) || (process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null);
       const bookingRef = reservation.id.slice(-8).toUpperCase();
       const { subject, html } = buildConfirmationEmail({
         firstName: meta.firstName,

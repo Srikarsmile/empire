@@ -52,6 +52,7 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(body.minNights !== undefined && { minNights: Number(body.minNights) }),
         ...(body.bookedRanges !== undefined && { bookedRanges: body.bookedRanges }),
         ...(body.paused !== undefined && { paused: Boolean(body.paused) }),
+        ...(body.websiteUrl !== undefined && { websiteUrl: body.websiteUrl }),
       },
     });
     return NextResponse.json(vehicle);

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { FadeInUp } from '@/components/animations/MotionWrapper';
 import { getVehicleById } from '@/lib/vehicleData';
-import { ArrowLeft, MapPin, Star, CheckCircle2, Plane, ShieldCheck, Headset } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, CheckCircle2, Plane, ShieldCheck, Headset, Users } from 'lucide-react';
 import GalleryLightbox from './GalleryLightbox';
 import ReviewForm from './ReviewForm';
 
@@ -46,7 +46,8 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
     notFound();
   }
 
-  const nextBlockedWindow = vehicle.bookedRanges[0];
+  const today = new Date().toISOString().split('T')[0];
+  const nextBlockedWindow = vehicle.bookedRanges.find(r => r.end >= today) ?? null;
 
   return (
     <div className="page-shell property-page">
@@ -78,6 +79,16 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
             <section className="info-card">
               <h2>About this vehicle</h2>
               <p>{vehicle.description}</p>
+              {vehicle.websiteUrl && (
+                <a
+                  href={vehicle.websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-4 text-[var(--accent)] hover:underline font-medium"
+                >
+                  Visit website →
+                </a>
+              )}
             </section>
 
             <section className="info-card">
@@ -105,19 +116,22 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
               <div className="reviews-list">
                 {vehicle.reviews.length === 0 ? (
                   <p className="muted-label">No reviews yet. Be the first to leave one below.</p>
-                ) : vehicle.reviews.map((review) => (
+                ) : [...vehicle.reviews].reverse().map((review) => (
                   <article key={review.id} className="review-item">
                     <div className="review-top-row">
                       <div>
                         <strong>{review.guestName}</strong>
                         <p>{formatDate(review.date)}</p>
                       </div>
-                      <span>
-                        <Star className="inline w-4 h-4 fill-current" /> {review.rating.toFixed(1)}
+                      <span className="review-stars" aria-label={`${review.rating} out of 5`}>
+                        {[1,2,3,4,5].map((s) => (
+                          <Star key={s} className={`inline w-3.5 h-3.5 ${s <= Math.round(review.rating) ? 'fill-current text-yellow-400' : 'text-gray-300'}`} />
+                        ))}
                       </span>
                     </div>
 
                     <p className="review-comment">{review.comment}</p>
+                    <span className="verified-badge"><ShieldCheck className="inline w-3.5 h-3.5" /> Verified Renter</span>
                   </article>
                 ))}
               </div>
@@ -133,28 +147,40 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
                 <span>per day</span>
               </div>
 
+              <p className="sidebar-capacity"><Users className="inline w-4 h-4" /> Up to {vehicle.capacity} passengers</p>
+
               <div className="availability-pill">
                 <CheckCircle2 className="inline w-4 h-4" />
                 Minimum rental: {vehicle.minNights} day{vehicle.minNights > 1 ? 's' : ''}
               </div>
 
-              {nextBlockedWindow ? (
-                <p className="next-blocked-note">
-                  Next unavailable window: {formatDate(nextBlockedWindow.start)} - {formatDate(nextBlockedWindow.end)}
-                </p>
-              ) : null}
+              {(() => {
+                if (!nextBlockedWindow) {
+                  return <span className="available-pill"><CheckCircle2 className="inline w-4 h-4" /> Available now</span>;
+                }
+                const nextStart = new Date(nextBlockedWindow.start + 'T00:00:00');
+                const sevenDaysFromNow = new Date();
+                sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+                if (nextStart <= sevenDaysFromNow) {
+                  return <span className="status-pill confirmed">Booked until {formatDate(nextBlockedWindow.end)}</span>;
+                }
+                return <p className="next-blocked-note">Next unavailable: {formatDate(nextBlockedWindow.start)} – {formatDate(nextBlockedWindow.end)}</p>;
+              })()}
 
-              <ul className="booking-notes">
-                <li>
-                  <Plane className="w-4 h-4 shrink-0" /> Airport and villa handoff
-                </li>
-                <li>
-                  <ShieldCheck className="w-4 h-4 shrink-0" /> Insurance support available
-                </li>
-                <li>
-                  <Headset className="w-4 h-4 shrink-0" /> 24/7 roadside help
-                </li>
-              </ul>
+              <div className="trust-grid">
+                <div className="trust-item">
+                  <span className="trust-icon"><Plane className="w-4 h-4" /></span>
+                  <p>Airport &amp; villa handoff</p>
+                </div>
+                <div className="trust-item">
+                  <span className="trust-icon"><ShieldCheck className="w-4 h-4" /></span>
+                  <p>Optional insurance</p>
+                </div>
+                <div className="trust-item">
+                  <span className="trust-icon"><Headset className="w-4 h-4" /></span>
+                  <p>24/7 direct support</p>
+                </div>
+              </div>
 
               <Link href={`/reserve/${vehicle.id}`} className="btn-primary full-width">
                 Reserve this vehicle

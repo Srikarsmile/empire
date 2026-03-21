@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -31,6 +31,7 @@ export default function AddVehicle() {
     description: "",
     location: "Sosua and Puerto Plata Airport",
     amenities: "",
+    websiteUrl: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -54,6 +55,7 @@ export default function AddVehicle() {
         amenities: form.amenities.split(',').map((a) => a.trim()).filter(Boolean),
         images,
         imageBlurs,
+        websiteUrl: form.websiteUrl,
       }),
     });
 
@@ -102,27 +104,36 @@ export default function AddVehicle() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Location</label>
-            <select
-              name="location"
-              value={form.location}
-              onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
-              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all bg-white"
-            >
-              <option value="">Select location...</option>
-              {airports.map((a) => (
-                <option key={a.id} value={`${a.name}, ${a.city}`}>
-                  {a.name}, {a.city}
-                </option>
-              ))}
-              {airports.length === 0 && (
-                <option disabled>No airports configured — add them in Settings</option>
-              )}
-            </select>
+            <div className="relative">
+              <select
+                name="location"
+                value={form.location}
+                onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
+                className="w-full appearance-none rounded-xl border border-gray-300 px-4 py-2.5 pr-10 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all bg-white"
+              >
+                <option value="">Select location...</option>
+                {airports.map((a) => (
+                  <option key={a.id} value={`${a.name}, ${a.city}`}>
+                    {a.name}, {a.city}
+                  </option>
+                ))}
+                {airports.length === 0 && (
+                  <option disabled>No airports configured — add them in Settings</option>
+                )}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Description</label>
             <textarea required name="description" rows={4} placeholder="Describe the vehicle and its best features..." value={form.description} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all resize-none" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Website Link</label>
+            <input name="websiteUrl" type="url" placeholder="https://example.com" value={form.websiteUrl} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
+            <p className="text-xs text-gray-400">Optional — external link shown on the vehicle page</p>
           </div>
 
           <div className="space-y-2">
