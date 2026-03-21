@@ -38,8 +38,15 @@ function formatDate(value: string) {
   });
 }
 
-export default async function FleetDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function FleetDetailsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ checkIn?: string; checkOut?: string }>;
+}) {
   const { id } = await params;
+  const { checkIn, checkOut } = await searchParams;
   const vehicle = await getVehicleById(id);
 
   if (!vehicle) {
@@ -182,7 +189,10 @@ export default async function FleetDetailsPage({ params }: { params: Promise<{ i
                 </div>
               </div>
 
-              <Link href={`/reserve/${vehicle.id}`} className="btn-primary full-width">
+              <Link
+                href={checkIn && checkOut ? `/reserve/${vehicle.id}?checkIn=${checkIn}&checkOut=${checkOut}` : `/reserve/${vehicle.id}`}
+                className="btn-primary full-width"
+              >
                 Reserve this vehicle
               </Link>
             </aside>

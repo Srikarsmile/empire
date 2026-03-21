@@ -53,16 +53,16 @@ function FleetCard({
   checkOut: string;
 }) {
   const [imgLoaded, setImgLoaded] = useState(false);
-  const reserveHref = checkIn && checkOut
-    ? `/reserve/${vehicle.id}?checkIn=${checkIn}&checkOut=${checkOut}`
-    : `/reserve/${vehicle.id}`;
+  const vehicleHref = checkIn && checkOut
+    ? `/fleet/${vehicle.id}?checkIn=${checkIn}&checkOut=${checkOut}`
+    : `/fleet/${vehicle.id}`;
 
   return (
     <AnimatedCard
       className="group relative flex flex-col bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:border-[var(--accent)] transition-colors duration-200 overflow-hidden"
       index={index}
     >
-      <Link href={reserveHref} className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)] block">
+      <Link href={vehicleHref} className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--surface-soft)] border-b border-[var(--border)] block">
         <span
           className={`skeleton absolute inset-0 z-10 transition-opacity duration-500 ${imgLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         />
@@ -117,10 +117,10 @@ function FleetCard({
             <span className="text-[var(--ink-500)] font-medium text-sm ml-1">/ day</span>
           </div>
           <Link
-            href={reserveHref}
+            href={vehicleHref}
             className="inline-flex items-center justify-center h-10 px-6 text-sm font-bold text-white transition bg-[var(--accent)] rounded-xl hover:bg-[var(--accent-light)] active:bg-[var(--accent-strong)]"
           >
-            Book
+            View
           </Link>
         </div>
       </div>
