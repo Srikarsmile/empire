@@ -83,7 +83,10 @@ export default function AdminLayout({
           <Link href="/" className="flex items-center gap-3 mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Empire Cars Logo" className="h-9 w-auto object-contain" />
-            <span className="font-semibold text-base tracking-tight">Admin</span>
+            <div>
+              <span className="block font-bold text-sm text-gray-900 tracking-tight leading-none">Empire Cars</span>
+              <span className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase mt-0.5">Admin Panel</span>
+            </div>
           </Link>
 
           <NavItems pathname={pathname} />
@@ -108,7 +111,10 @@ export default function AdminLayout({
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="Empire Cars Logo" className="h-8 w-auto object-contain" />
-          <span className="font-semibold text-base tracking-tight">Admin</span>
+          <div>
+            <span className="block font-bold text-sm text-gray-900 tracking-tight leading-none">Empire Cars</span>
+            <span className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase mt-0.5">Admin Panel</span>
+          </div>
         </div>
         <button
           onClick={() => setMobileOpen((v) => !v)}
