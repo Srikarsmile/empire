@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -123,10 +123,11 @@ export default function Header() {
             {user ? (
               <div className="hidden sm:flex items-center gap-3 mr-1">
                 {user.isAdmin && (
-                   <Link 
-                     href="/admin" 
-                     className="text-xs font-bold tracking-wide uppercase text-blue-600 hover:text-blue-800 transition-colors"
+                   <Link
+                     href="/admin"
+                     className="inline-flex items-center gap-1.5 bg-gray-900 text-white text-[11px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-lg hover:bg-black transition-colors"
                    >
+                     <LayoutDashboard className="w-3 h-3" />
                      Admin
                    </Link>
                 )}
@@ -227,8 +228,9 @@ export default function Header() {
                         <Link
                           href="/admin"
                           onClick={() => setMenuOpen(false)}
-                          className="block w-full text-left rounded-xl px-4 py-3 text-base font-semibold text-blue-600 transition-colors hover:bg-blue-50"
+                          className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
                         >
+                          <LayoutDashboard className="w-4 h-4 text-gray-500" />
                           Admin Panel
                         </Link>
                       )}
