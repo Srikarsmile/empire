@@ -113,12 +113,22 @@ export async function GET(request: Request) {
       airportFee: Number(meta.airportFee ?? 0),
       dropoffLocation: meta.dropoffLocation ?? '',
       insuranceFee: Number(meta.insuranceFee ?? 0),
+      promoCode: meta.promoCode ?? '',
+      promoDiscount: Number(meta.promoDiscount ?? 0),
       total: Number(meta.total),
       firstName: meta.firstName,
       lastName: meta.lastName,
       email: meta.email,
       phone: meta.phone,
     });
+
+    // Increment promo code usage
+    if (meta.promoCode) {
+      await prisma.promoCode.updateMany({
+        where: { code: meta.promoCode },
+        data: { usedCount: { increment: 1 } },
+      }).catch(() => {});
+    }
 
     // Best-effort: send confirmation email in case webhook is delayed or missed
     try {

@@ -2,17 +2,38 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/adminAuth';
 
-export async function GET() {
+export async function GET(request: Request) {
   const authError = await requireAdmin();
   if (authError instanceof NextResponse) return authError;
+
+  const { searchParams } = new URL(request.url);
+  const search = searchParams.get('search') ?? '';
+  const status = searchParams.get('status') ?? '';
+
+  const where = {
+    ...(status ? { status } : {}),
+    ...(search
+      ? {
+          OR: [
+            { firstName: { contains: search, mode: 'insensitive' as const } },
+            { lastName: { contains: search, mode: 'insensitive' as const } },
+            { email: { contains: search, mode: 'insensitive' as const } },
+            { vehicleTitle: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }
+      : {}),
+  };
+
   const reservations = await prisma.reservation.findMany({
+    where,
     orderBy: { createdAt: 'desc' },
   });
 
   const headers = [
     'ID', 'First Name', 'Last Name', 'Email', 'Phone',
     'Vehicle', 'Check-in', 'Check-out', 'Nights',
-    'Price/day', 'Subtotal', 'Taxes', 'Total', 'Status', 'Booked At',
+    'Price/day', 'Subtotal', 'Taxes', 'Airport Fee', 'Insurance Fee',
+    'Promo Code', 'Promo Discount', 'Total', 'Status', 'Booked At',
   ];
 
   function esc(value: string | number) {
@@ -35,6 +56,10 @@ export async function GET() {
     r.price,
     r.subtotal,
     r.taxes,
+    r.airportFee,
+    r.insuranceFee,
+    r.promoCode,
+    r.promoDiscount,
     r.total,
     r.status,
     new Date(r.createdAt).toISOString(),

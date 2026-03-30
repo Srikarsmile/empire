@@ -160,7 +160,7 @@ export default function ReservationsPage() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <a
-            href="/api/admin/reservations/export"
+            href={`/api/admin/reservations/export?search=${encodeURIComponent(search)}&status=${encodeURIComponent(statusFilter)}`}
             download
             className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition whitespace-nowrap"
           >

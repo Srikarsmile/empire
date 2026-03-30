@@ -6,6 +6,7 @@ import { getVehicleById } from '@/lib/vehicleData';
 import { ArrowLeft, MapPin, Star, CheckCircle2, Plane, ShieldCheck, Headset, Users } from 'lucide-react';
 import GalleryLightbox from './GalleryLightbox';
 import ReviewForm from './ReviewForm';
+import AvailabilityDisplay from '@/components/AvailabilityDisplay';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -108,6 +109,11 @@ export default async function FleetDetailsPage({
                   </li>
                 ))}
               </ul>
+            </section>
+
+            <section className="info-card">
+              <h2>Availability</h2>
+              <AvailabilityDisplay bookedRanges={vehicle.bookedRanges} />
             </section>
 
             <section className="info-card reviews-card">

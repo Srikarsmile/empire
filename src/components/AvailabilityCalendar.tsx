@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DateRange } from '@/lib/dateUtils';
 import { normalizeDate, dateToKey, keyToDate, addDays } from '@/lib/dateUtils';
 
@@ -57,11 +58,28 @@ export default function AvailabilityCalendar({
     return set;
   }, [bookedRanges]);
 
-  const monthStarts = useMemo(() => {
+  const baseMonth = useMemo(() => {
     const now = normalizeDate(new Date());
-    const first = new Date(now.getFullYear(), now.getMonth(), 1);
-    const second = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }, []);
+
+  const [offset, setOffset] = useState(0);
+
+  const monthStarts = useMemo(() => {
+    const first = new Date(baseMonth.getFullYear(), baseMonth.getMonth() + offset, 1);
+    const second = new Date(baseMonth.getFullYear(), baseMonth.getMonth() + offset + 1, 1);
     return [first, second];
+  }, [baseMonth, offset]);
+
+  const canGoPrev = offset > 0;
+  const canGoNext = offset < 11;
+
+  const handlePrevMonth = useCallback(() => {
+    setOffset((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const handleNextMonth = useCallback(() => {
+    setOffset((prev) => Math.min(11, prev + 1));
   }, []);
 
   const inSelectedRange = (dateKey: string) => {
@@ -142,7 +160,27 @@ export default function AvailabilityCalendar({
 
           return (
             <div key={monthLabel} className={`calendar-month${index === 1 ? ' calendar-month--second' : ''}`}>
-              <h4>{monthLabel}</h4>
+              <div className="calendar-month-header">
+                <button
+                  type="button"
+                  className="calendar-nav-btn"
+                  onClick={handlePrevMonth}
+                  disabled={!canGoPrev}
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <h4>{monthLabel}</h4>
+                <button
+                  type="button"
+                  className="calendar-nav-btn"
+                  onClick={handleNextMonth}
+                  disabled={!canGoNext}
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
               <div className="calendar-weekdays">
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                   <span key={i}>{day}</span>

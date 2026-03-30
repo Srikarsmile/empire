@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       airportFee?: number;
       dropoffLocation?: string;
       insuranceFee?: number;
+      promoCode?: string;
     };
 
     const vehicle = await getVehicleById(body.vehicleId);
@@ -76,7 +77,30 @@ export async function POST(request: Request) {
 
     const subtotal = vehicle.price * nights;
     const taxes = fees.taxEnabled ? Math.round(subtotal * (fees.taxRate / 100)) : 0;
-    const total = subtotal + taxes + airportFee + insuranceFee;
+
+    // Validate and apply promo code
+    let promoCode = '';
+    let promoDiscount = 0;
+    if (body.promoCode?.trim()) {
+      const promo = await prisma.promoCode.findUnique({
+        where: { code: body.promoCode.trim().toUpperCase() },
+      });
+      if (
+        promo &&
+        promo.active &&
+        (!promo.expiresAt || promo.expiresAt >= new Date()) &&
+        (promo.maxUses === null || promo.usedCount < promo.maxUses)
+      ) {
+        promoCode = promo.code;
+        promoDiscount =
+          promo.type === 'percentage'
+            ? Math.round(subtotal * (promo.value / 100))
+            : promo.value;
+        promoDiscount = Math.min(promoDiscount, subtotal);
+      }
+    }
+
+    const total = subtotal + taxes + airportFee + insuranceFee - promoDiscount;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
     const session = await stripe.checkout.sessions.create({
@@ -110,6 +134,8 @@ export async function POST(request: Request) {
         airportFee: String(airportFee),
         dropoffLocation,
         insuranceFee: String(insuranceFee),
+        promoCode,
+        promoDiscount: String(promoDiscount),
         total: String(total),
         firstName: body.firstName,
         lastName: body.lastName,

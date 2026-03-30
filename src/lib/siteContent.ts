@@ -80,7 +80,7 @@ export const defaultContent: SiteContentData = {
     description: 'Hand-picked vehicles perfect for Dominican Republic roads. Maintained to the highest standards for your peace of mind.',
   },
   business: {
-    phone: '+1-809-000-0000',
+    phone: '+1(849) 536-0261',
     hours: 'Mo-Su 08:00-20:00',
   },
   footer: {

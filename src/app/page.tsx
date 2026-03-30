@@ -143,7 +143,7 @@ export default async function Home() {
             "name": "Empire Cars Sosua",
             "description": "Premium car rentals in Sosua and Puerto Plata. Straightforward pricing, airport delivery, and a well-maintained fleet.",
             "url": "https://empirecarsosua.com",
-            "telephone": "+1-849-670-1234",
+            "telephone": "+18495360261",
             "address": {
               "@type": "PostalAddress",
               "addressLocality": "Sosua",

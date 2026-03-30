@@ -77,7 +77,7 @@ export default function Header() {
                 width={3168}
                 height={1344}
                 priority
-                className="h-full w-auto object-contain mix-blend-multiply"
+                className="h-full w-auto object-contain"
               />
             </div>
           </Link>

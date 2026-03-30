@@ -87,6 +87,11 @@ export default function ReservationFlow({ vehicleId, cancellationPolicy }: { veh
   const [wantsInsurance, setWantsInsurance] = useState(false);
   const [errorToast, setErrorToast] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [promoInput, setPromoInput] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoError, setPromoError] = useState('');
+  const [promoApplying, setPromoApplying] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -160,7 +165,41 @@ export default function ReservationFlow({ vehicleId, cancellationPolicy }: { veh
   const subtotal = (vehicle?.price ?? 0) * nights;
   const taxes = taxEnabled ? Math.round(subtotal * (taxRate / 100)) : 0;
   const appliedInsuranceFee = insuranceEnabled && wantsInsurance ? insuranceFee : 0;
-  const total = subtotal + taxes + airportFee + appliedInsuranceFee;
+  const total = subtotal + taxes + airportFee + appliedInsuranceFee - promoDiscount;
+
+  const applyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setPromoApplying(true);
+    setPromoError('');
+    try {
+      const res = await fetch('/api/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoInput.trim(), subtotal }),
+      });
+      const data = (await res.json()) as { code?: string; discount?: number; error?: string };
+      if (res.ok && data.code && data.discount !== undefined) {
+        setPromoCode(data.code);
+        setPromoDiscount(data.discount);
+        setPromoError('');
+      } else {
+        setPromoError(data.error ?? 'Invalid promo code');
+        setPromoCode('');
+        setPromoDiscount(0);
+      }
+    } catch {
+      setPromoError('Could not apply code. Please retry.');
+    } finally {
+      setPromoApplying(false);
+    }
+  };
+
+  const removePromo = () => {
+    setPromoCode('');
+    setPromoDiscount(0);
+    setPromoInput('');
+    setPromoError('');
+  };
 
   const markTouched = (field: keyof FormData) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -186,6 +225,7 @@ export default function ReservationFlow({ vehicleId, cancellationPolicy }: { veh
           airportFee,
           dropoffLocation: selectedAirport ? `${selectedAirport.name}, ${selectedAirport.city}` : '',
           insuranceFee: appliedInsuranceFee,
+          promoCode: promoCode || undefined,
         }),
       });
 
@@ -346,7 +386,7 @@ export default function ReservationFlow({ vehicleId, cancellationPolicy }: { veh
             <aside className="booking-side">
               <div className="booking-card sticky">
                 <div className="booking-place">
-                  <Image src={vehicle.images[0]} alt={vehicle.title} width={86} height={86} />
+                  <Image src={vehicle.images[0]} alt={vehicle.title} width={86} height={86} unoptimized={vehicle.images[0]?.startsWith('/uploads/')} />
                   <div>
                     <h3>{vehicle.title}</h3>
                     <p>{vehicle.capacity} seats • {vehicle.location}</p>
@@ -380,11 +420,47 @@ export default function ReservationFlow({ vehicleId, cancellationPolicy }: { veh
                       <strong>${appliedInsuranceFee}</strong>
                     </div>
                   )}
+                  {promoDiscount > 0 && (
+                    <div style={{ color: 'var(--success, #16a34a)' }}>
+                      <span>Promo ({promoCode})</span>
+                      <strong>-${promoDiscount}</strong>
+                    </div>
+                  )}
                   <div className="total-row">
                     <span>Total</span>
                     <strong>${total}</strong>
                   </div>
                 </div>
+
+                {/* Promo code input */}
+                {!promoCode ? (
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        placeholder="Promo code"
+                        value={promoInput}
+                        onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyPromo(); } }}
+                        style={{ flex: 1, borderRadius: '0.75rem', border: '1px solid var(--border)', padding: '0.5rem 0.75rem', fontSize: '0.875rem' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={applyPromo}
+                        disabled={promoApplying || !promoInput.trim()}
+                        style={{ borderRadius: '0.75rem', border: '1px solid var(--border)', padding: '0.5rem 0.875rem', fontSize: '0.875rem', fontWeight: 600, background: 'white', cursor: 'pointer', opacity: promoApplying || !promoInput.trim() ? 0.5 : 1 }}
+                      >
+                        {promoApplying ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                    {promoError && <small style={{ color: 'var(--danger)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>{promoError}</small>}
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-soft, #f9fafb)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '0.5rem 0.75rem', fontSize: '0.875rem' }}>
+                    <span style={{ color: 'var(--success, #16a34a)', fontWeight: 600 }}>✓ {promoCode} applied</span>
+                    <button type="button" onClick={removePromo} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-400, #9ca3af)', fontSize: '0.8rem' }}>Remove</button>
+                  </div>
+                )}
 
                 {cancellationPolicy && (
                   <div style={{

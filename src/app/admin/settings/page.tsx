@@ -344,10 +344,175 @@ function AccountTab() {
   );
 }
 
+type PromoCode = {
+  id: string;
+  code: string;
+  type: string;
+  value: number;
+  usedCount: number;
+  maxUses: number | null;
+  expiresAt: string | null;
+  active: boolean;
+};
+
+function PromoCodesTab() {
+  const [codes, setCodes] = useState<PromoCode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ code: '', type: 'percentage', value: '', maxUses: '', expiresAt: '' });
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/promo-codes')
+      .then((r) => r.json())
+      .then((data) => { setCodes(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.code.trim() || !form.value) return;
+    setFormError('');
+    setSaving(true);
+    const res = await fetch('/api/admin/promo-codes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: form.code.trim(),
+        type: form.type,
+        value: Number(form.value),
+        maxUses: form.maxUses ? Number(form.maxUses) : null,
+        expiresAt: form.expiresAt || null,
+      }),
+    });
+    if (res.ok) {
+      const promo = await res.json();
+      setCodes((prev) => [promo, ...prev]);
+      setForm({ code: '', type: 'percentage', value: '', maxUses: '', expiresAt: '' });
+    } else {
+      const err = await res.json();
+      setFormError(err.error ?? 'Failed to create code');
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this promo code?')) return;
+    const res = await fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setCodes((prev) => prev.filter((c) => c.id !== id));
+    }
+  };
+
+  const inputCls = 'w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none';
+
+  if (loading) {
+    return <div className="flex items-center gap-2 text-gray-400 text-sm py-8"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-gray-500">Create discount codes for customers to use at checkout.</p>
+
+      {codes.length > 0 ? (
+        <div className="space-y-2">
+          {codes.map((c) => (
+            <div key={c.id} className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3">
+              <div>
+                <p className="text-sm font-mono font-semibold text-gray-900">{c.code}</p>
+                <p className="text-xs text-gray-500">
+                  {c.type === 'percentage' ? `${c.value}% off` : `$${c.value} off`}
+                  {' · '}Used: {c.usedCount}{c.maxUses !== null ? `/${c.maxUses}` : ''}
+                  {c.expiresAt ? ` · Expires: ${new Date(c.expiresAt).toLocaleDateString()}` : ''}
+                  {' · '}<span className={c.active ? 'text-green-600' : 'text-red-500'}>{c.active ? 'Active' : 'Inactive'}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => handleDelete(c.id)}
+                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="py-8 text-center text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">
+          No promo codes yet. Add one below.
+        </div>
+      )}
+
+      <form onSubmit={handleAdd} className="space-y-3 pt-2 border-t border-gray-100">
+        <p className="text-sm font-medium text-gray-700">Add new code</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600">Code</label>
+            <input
+              required type="text" placeholder="SUMMER20"
+              value={form.code}
+              onChange={(e) => setForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
+              className={inputCls}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600">Type</label>
+            <select
+              value={form.type}
+              onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+              className={inputCls}
+            >
+              <option value="percentage">Percentage (%)</option>
+              <option value="fixed">Fixed amount ($)</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600">
+              Value ({form.type === 'percentage' ? '%' : '$'})
+            </label>
+            <input
+              required type="number" min="1" placeholder={form.type === 'percentage' ? '10' : '20'}
+              value={form.value}
+              onChange={(e) => setForm((p) => ({ ...p, value: e.target.value }))}
+              className={inputCls}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600">Max uses (blank = unlimited)</label>
+            <input
+              type="number" min="1" placeholder="100"
+              value={form.maxUses}
+              onChange={(e) => setForm((p) => ({ ...p, maxUses: e.target.value }))}
+              className={inputCls}
+            />
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <label className="text-xs font-medium text-gray-600">Expiry date (optional)</label>
+            <input
+              type="date"
+              value={form.expiresAt}
+              onChange={(e) => setForm((p) => ({ ...p, expiresAt: e.target.value }))}
+              className={inputCls}
+            />
+          </div>
+        </div>
+        {formError && <p className="text-sm text-red-500">{formError}</p>}
+        <button
+          type="submit" disabled={saving}
+          className="flex items-center gap-1.5 bg-black text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-60"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          {saving ? 'Creating...' : 'Create code'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 const TABS = [
   { id: 'pricing', label: 'Pricing' },
   { id: 'locations', label: 'Locations' },
   { id: 'account', label: 'Account' },
+  { id: 'promo-codes', label: 'Promo Codes' },
 ] as const;
 
 type TabId = typeof TABS[number]['id'];
@@ -385,6 +550,7 @@ export default function AdminSettings() {
           {activeTab === 'pricing' && <PricingTab />}
           {activeTab === 'locations' && <LocationsTab />}
           {activeTab === 'account' && <AccountTab />}
+          {activeTab === 'promo-codes' && <PromoCodesTab />}
         </div>
       </div>
     </div>

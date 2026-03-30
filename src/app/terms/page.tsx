@@ -248,7 +248,7 @@ export default function TermsOfServicePage() {
                   <a href="mailto:nicolas@cometsports.co.uk" className="text-[var(--accent)] hover:underline">nicolas@cometsports.co.uk</a>
                 </li>
                 <li><strong>WhatsApp:</strong>{' '}
-                  <a href="https://wa.me/447802701565" className="text-[var(--accent)] hover:underline">+44 7802 701565</a>
+                  <a href="https://wa.me/18495360261" className="text-[var(--accent)] hover:underline">+1(849) 536-0261</a>
                 </li>
                 <li><strong>Business hours:</strong> Monday–Sunday, 08:00–20:00 (AST)</li>
               </ul>

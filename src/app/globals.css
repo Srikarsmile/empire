@@ -1786,11 +1786,49 @@ p {
   background: #fff;
 }
 
-.calendar-month h4 {
+.calendar-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.calendar-month-header h4 {
   font-family: var(--font-body);
   font-size: 0.86rem;
   font-weight: 700;
-  margin-bottom: 0.4rem;
+  margin: 0;
+}
+
+.calendar-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink-700);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s var(--ease-fluid), border-color 0.15s var(--ease-fluid);
+}
+
+.calendar-nav-btn:hover {
+  background: var(--accent-surface);
+  border-color: var(--ink-400);
+}
+
+.calendar-nav-btn:active {
+  background: var(--accent-surface);
+  transform: scale(0.92);
+}
+
+.calendar-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .calendar-weekdays,
@@ -1810,16 +1848,25 @@ p {
 .calendar-day {
   border: 0;
   border-radius: 0.5rem;
-  height: 1.85rem;
+  height: 2.25rem;
   background: transparent;
   color: var(--ink-700);
   font-size: 0.74rem;
   font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.2s var(--ease-fluid), color 0.2s var(--ease-fluid);
 }
 
 .calendar-day:hover:not(:disabled) {
   background: var(--accent-surface);
+}
+
+.calendar-day:active:not(:disabled) {
+  background: var(--accent-surface);
+  transform: scale(0.93);
+  transition-duration: 0.05s;
 }
 
 .calendar-day.outside {
@@ -2384,7 +2431,7 @@ button:disabled {
   }
 
   .calendar-day {
-    height: 2.1rem;
+    height: 2.75rem;
   }
 
   .results-header {
@@ -2523,9 +2570,6 @@ button:disabled {
     gap: 0.4rem;
   }
 
-  .calendar-month:nth-child(2) {
-    display: none;
-  }
 
   .booking-place {
     grid-template-columns: 4.6rem 1fr;
@@ -2659,7 +2703,7 @@ button:disabled {
   }
 
   .calendar-day {
-    height: 2rem;
+    height: 2.75rem;
     font-size: 0.7rem;
   }
 

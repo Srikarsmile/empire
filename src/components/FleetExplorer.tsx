@@ -76,6 +76,7 @@ function FleetCard({
           placeholder={vehicle.imageBlurs?.[0] ? 'blur' : 'empty'}
           blurDataURL={vehicle.imageBlurs?.[0] || undefined}
           onLoad={() => setImgLoaded(true)}
+          unoptimized={vehicle.images[0]?.startsWith('/uploads/')}
         />
         <button
           className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] transition cursor-pointer hover:bg-[var(--surface-soft)]"

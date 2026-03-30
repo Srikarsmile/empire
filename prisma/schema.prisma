@@ -30,6 +30,8 @@ model Reservation {
   dropoffLocation String   @default("")
   insuranceFee    Int      @default(0)
   notes           String   @default("")
+  promoCode       String   @default("")
+  promoDiscount   Int      @default(0)
 
   @@index([status])
   @@index([vehicleId])
@@ -64,6 +66,18 @@ model SiteContent {
   id        String   @id @default("main")
   data      Json     @default("{}")
   updatedAt DateTime @updatedAt
+}
+
+model PromoCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  type      String    // "percentage" | "fixed"
+  value     Int       // percent (1–100) or fixed cents
+  usedCount Int       @default(0)
+  maxUses   Int?      // null = unlimited
+  expiresAt DateTime?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
 }
 
 model OtpCode {

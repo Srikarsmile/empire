@@ -67,6 +67,7 @@ export default function GalleryLightbox({ images, imageBlurs, title }: GalleryLi
               sizes="(max-width: 900px) 100vw, 60vw"
               placeholder={imageBlurs?.[0] ? 'blur' : 'empty'}
               blurDataURL={imageBlurs?.[0] || undefined}
+              unoptimized={images[0]?.startsWith('/uploads/')}
             />
             <button
               className="gallery-show-all"
@@ -89,6 +90,7 @@ export default function GalleryLightbox({ images, imageBlurs, title }: GalleryLi
               sizes="(max-width: 900px) 50vw, 20vw"
               placeholder={imageBlurs?.[index + 1] ? 'blur' : 'empty'}
               blurDataURL={imageBlurs?.[index + 1] || undefined}
+              unoptimized={image?.startsWith('/uploads/')}
             />
           </div>
         ))}
@@ -133,6 +135,7 @@ export default function GalleryLightbox({ images, imageBlurs, title }: GalleryLi
                       priority
                       placeholder={imageBlurs?.[openIndex] ? 'blur' : 'empty'}
                       blurDataURL={imageBlurs?.[openIndex] || undefined}
+                      unoptimized={images[openIndex]?.startsWith('/uploads/')}
                     />
                   )}
                 </motion.div>
